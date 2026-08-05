@@ -1,10 +1,9 @@
+from app.services.google_books_service import search_books
 from fastapi import APIRouter
 
 router = APIRouter()
 
 
 @router.get("/books/search")
-def search_books(title: str):
-    return {
-        "title": title
-    }
+def search(title: str):
+    return search_books(title)
