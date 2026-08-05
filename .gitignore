@@ -9,6 +9,16 @@ __pycache__/
 # Environment variables
 .env
 
+# SQLite
+bookmind.db
+
+# Pytest
+.pytest_cache/
+
+# Coverage
+.coverage
+htmlcov/
+
 # VS Code
 .vscode/
 
