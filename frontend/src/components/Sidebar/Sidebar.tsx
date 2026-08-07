@@ -30,7 +30,7 @@ function Sidebar({
 
       <input
         type="text"
-        placeholder="Digite o nome do livro..."
+        placeholder="Type here..."
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
