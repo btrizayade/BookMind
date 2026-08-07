@@ -1,0 +1,114 @@
+/* RESET */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+body {
+  font-family: Inter, sans-serif;
+  background: #f7efe4;
+}
+
+/* CONTAINER CENTRAL */
+.container {
+  min-height: 100vh;
+  padding: 32px 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* LAYOUT BASE */
+.layout {
+  width: 100%;
+  transition: 0.35s ease;
+}
+
+/* TELA INICIAL (nenhum livro ainda) */
+.layout-empty {
+  max-width: 380px;
+  margin: auto;
+}
+
+/* RESULTADO (com livro, loading ou erro) */
+.layout-book {
+  max-width: 1700px;
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: 56px;
+  align-items: center;
+}
+
+/* ÁREA DO LIVRO */
+.book-area {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 700px;
+  animation: fade 0.35s ease;
+}
+
+/* NOTA: removemos .layout-empty .book-area {display:none;} 
+   para permitir que loading/erro sejam visíveis mesmo sem livro. */
+
+/* LOADING CARD */
+.loading-card {
+  width: 360px;
+  padding: 28px;
+  border-radius: 20px;
+  background: #fdf8f3;
+  border: 1px solid #e4d2bc;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  animation: fade 0.25s ease;
+}
+.loading-icon {
+  display: block;
+  font-size: 2.5rem;
+  margin-bottom: 16px;
+  animation: float 1.4s infinite ease-in-out;
+}
+.loading-card h3 {
+  color: #7b4d3f;
+  margin-bottom: 8px;
+}
+.loading-card p {
+  color: #8a7367;
+  line-height: 1.6;
+}
+
+/* ERROR CARD */
+.error-card {
+  width: 420px;
+  padding: 22px;
+  border-radius: 18px;
+  background: #f9efe8;
+  border: 1px solid #e4cbb9;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  animation: fade 0.25s ease;
+}
+.error-icon {
+  font-size: 2rem;
+}
+.error-card h3 {
+  margin-bottom: 8px;
+  color: #7b4d3f;
+}
+.error-card p {
+  color: #6b5a4d;
+  line-height: 1.6;
+}
+
+/* ANIMAÇÕES */
+@keyframes fade {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0); }
+}
