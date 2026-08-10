@@ -35,6 +35,7 @@ Search any book, explore detailed information from Google Books, generate AI-pow
 - 🎨 Modern React interface
 - 📖 Detailed book metadata
 - 🔍 Categories, ratings and preview links
+- 💾 Caches book data and AI-generated summaries in PostgreSQL
 - ☁️ Fully deployed online
 
 ---
