@@ -5,15 +5,16 @@ from google import genai
 
 from app.schemas.book import BookResponse
 
+
 load_dotenv()
+
 
 client = genai.Client(
     api_key=os.getenv("GEMINI_API_KEY")
 )
 
 
-def generate_summary(book: BookResponse) -> str:
-
+def generate_summary(book: BookResponse) -> str | None:
     prompt = f"""
 You are an expert book reviewer.
 
@@ -59,9 +60,19 @@ Example:
 - Essential reading for developers.
 """
 
-    response = client.models.generate_content(
-        model="gemini-3.5-flash",
-        contents=prompt,
-    )
+    try:
+        response = client.models.generate_content(
+            model="gemini-3.5-flash",
+            contents=prompt,
+            config={
+                "http_options": {
+                    "timeout": 10000,
+                }
+            },
+        )
 
-    return response.text
+        return response.text
+
+    except Exception as error:
+        print(f"⚠️ Gemini unavailable: {error}")
+        return None

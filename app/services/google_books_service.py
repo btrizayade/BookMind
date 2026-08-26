@@ -8,7 +8,9 @@ from app.repositories.book_repository import BookRepository
 from app.schemas.book import BookResponse
 from app.services.gemini_service import generate_summary
 
+
 load_dotenv()
+
 
 BASE_URL = "https://www.googleapis.com/books/v1/volumes"
 API_KEY = os.getenv("GOOGLE_BOOKS_API_KEY")
@@ -22,8 +24,8 @@ def search_books(title: str, db: Session):
     if book:
         print("📚 Livro encontrado no banco.")
 
-        # Atualiza o resumo caso esteja vazio
-        # ou ainda esteja no formato antigo.
+        # Gera o resumo apenas se ele estiver vazio
+        # ou ainda estiver no formato antigo.
         if (
             book.description
             and (
@@ -33,27 +35,36 @@ def search_books(title: str, db: Session):
         ):
             print("🤖 Atualizando resumo com IA...")
 
-            book.ai_summary = generate_summary(
+            summary = generate_summary(
                 BookResponse(
-                title=book.title,
-                authors=book.authors.split(", "),
-                publisher=book.publisher,
-                page_count=book.page_count,
-                published_year=book.published_year,
-                language=book.language,
-                categories=book.categories.split(", ") if book.categories else [],
-                description=book.description,
-                preview_link=book.preview_link,
-                google_rating=book.google_rating,
-                ratings_count=book.ratings_count,
-                thumbnail=book.thumbnail,
-                ai_summary=book.ai_summary,
-                source=book.source,
-    )
-)
+                    title=book.title,
+                    authors=book.authors.split(", "),
+                    publisher=book.publisher,
+                    page_count=book.page_count,
+                    published_year=book.published_year,
+                    language=book.language,
+                    categories=(
+                        book.categories.split(", ")
+                        if book.categories
+                        else []
+                    ),
+                    description=book.description,
+                    preview_link=book.preview_link,
+                    google_rating=book.google_rating,
+                    ratings_count=book.ratings_count,
+                    thumbnail=book.thumbnail,
+                    ai_summary=book.ai_summary,
+                    source=book.source,
+                )
+            )
 
-            db.commit()
-            db.refresh(book)
+            # Só atualiza o banco se o Gemini conseguiu gerar o resumo.
+            if summary:
+                book.ai_summary = summary
+                db.commit()
+                db.refresh(book)
+            else:
+                print("⚠️ Resumo com IA indisponível.")
 
         return BookResponse(
             title=book.title,
@@ -62,7 +73,11 @@ def search_books(title: str, db: Session):
             page_count=book.page_count,
             published_year=book.published_year,
             language=book.language,
-            categories=book.categories.split(", ") if book.categories else [],
+            categories=(
+                book.categories.split(", ")
+                if book.categories
+                else []
+            ),
             description=book.description,
             preview_link=book.preview_link,
             google_rating=book.google_rating,
@@ -91,13 +106,18 @@ def search_books(title: str, db: Session):
     book_response = _map_google_book(volume)
 
     if book_response.description:
-        book_response.ai_summary = generate_summary(
-            book_response
-        )
+        summary = generate_summary(book_response)
+
+        # O livro continua sendo válido mesmo se o Gemini falhar.
+        if summary:
+            book_response.ai_summary = summary
+        else:
+            print("⚠️ Resumo com IA indisponível.")
 
     repository.save(db, book_response)
 
     return book_response
+
 
 def _map_google_book(volume: dict) -> BookResponse:
     return BookResponse(
@@ -114,5 +134,5 @@ def _map_google_book(volume: dict) -> BookResponse:
         ratings_count=volume.get("ratingsCount"),
         thumbnail=volume.get("imageLinks", {}).get("thumbnail"),
         ai_summary=None,
-        source="Google Books"
+        source="Google Books",
     )
