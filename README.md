@@ -152,12 +152,13 @@ BookMind
 
 ---
 
-# 🔮 Ideas for Future Improvements
+# 🔮 Future Improvements
 
 - ⭐ Favorites
+- 🔍 Find My Next Book
+- 💭 Should I Read It?
+- 🧬 Book DNA
 - 📚 Personal library
-- 🌙 Dark mode
-- ⚠ Graceful fallback when Gemini API is unavailable
 
 ---
 
