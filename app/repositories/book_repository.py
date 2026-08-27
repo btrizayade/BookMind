@@ -22,7 +22,8 @@ class BookRepository:
             ratings_count=book.ratings_count,
             thumbnail=book.thumbnail,
             ai_summary=book.ai_summary,
-            source=book.source
+            book_dna=book.book_dna,
+            source=book.source,
         )
 
         db.add(db_book)
@@ -36,4 +37,4 @@ class BookRepository:
             db.query(Book)
             .filter(func.lower(Book.title) == title.lower())
             .first()
-    )
+        )
