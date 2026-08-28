@@ -15,4 +15,5 @@ class BookResponse(BaseModel):
     ratings_count: int | None = None
     thumbnail: str | None = None
     ai_summary: str | None = None
+    book_dna: dict[str, int] | None = None
     source: str

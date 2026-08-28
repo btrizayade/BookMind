@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.repositories.book_repository import BookRepository
 from app.schemas.book import BookResponse
-from app.services.gemini_service import generate_summary
+from app.services.gemini_service import generate_book_analysis
 
 
 load_dotenv()
@@ -24,18 +24,12 @@ def search_books(title: str, db: Session):
     if book:
         print("📚 Livro encontrado no banco.")
 
-        # Gera o resumo apenas se ele estiver vazio
-        # ou ainda estiver no formato antigo.
-        if (
-            book.description
-            and (
-                not book.ai_summary
-                or "Why read this book?" not in book.ai_summary
-            )
-        ):
-            print("🤖 Atualizando resumo com IA...")
+        # Gera a análise apenas se o livro ainda não tiver
+        # resumo ou Book DNA.
+        if not book.ai_summary or not book.book_dna:
+            print("🤖 Gerando análise com IA...")
 
-            summary = generate_summary(
+            analysis = generate_book_analysis(
                 BookResponse(
                     title=book.title,
                     authors=book.authors.split(", "),
@@ -54,17 +48,24 @@ def search_books(title: str, db: Session):
                     ratings_count=book.ratings_count,
                     thumbnail=book.thumbnail,
                     ai_summary=book.ai_summary,
+                    book_dna=book.book_dna,
                     source=book.source,
                 )
             )
 
-            # Só atualiza o banco se o Gemini conseguiu gerar o resumo.
-            if summary:
-                book.ai_summary = summary
+            # Só atualiza o banco se o Gemini conseguiu gerar a análise.
+            if analysis:
+                if analysis.get("summary"):
+                    book.ai_summary = analysis["summary"]
+
+                if analysis.get("book_dna"):
+                    book.book_dna = analysis["book_dna"]
+
                 db.commit()
                 db.refresh(book)
+
             else:
-                print("⚠️ Resumo com IA indisponível.")
+                print("⚠️ Análise com IA indisponível.")
 
         return BookResponse(
             title=book.title,
@@ -84,6 +85,7 @@ def search_books(title: str, db: Session):
             ratings_count=book.ratings_count,
             thumbnail=book.thumbnail,
             ai_summary=book.ai_summary,
+            book_dna=book.book_dna,
             source=book.source,
         )
 
@@ -100,19 +102,23 @@ def search_books(title: str, db: Session):
     response.raise_for_status()
 
     data = response.json()
+
+    if not data.get("items"):
+        return None
+
     book = data["items"][0]
     volume = book["volumeInfo"]
 
     book_response = _map_google_book(volume)
 
-    if book_response.description:
-        summary = generate_summary(book_response)
+    analysis = generate_book_analysis(book_response)
 
-        # O livro continua sendo válido mesmo se o Gemini falhar.
-        if summary:
-            book_response.ai_summary = summary
-        else:
-            print("⚠️ Resumo com IA indisponível.")
+# O livro continua sendo válido mesmo se o Gemini falhar.
+    if analysis:
+        book_response.ai_summary = analysis.get("summary")
+        book_response.book_dna = analysis.get("book_dna")
+    else:
+        print("⚠️ Análise com IA indisponível.")
 
     repository.save(db, book_response)
 
@@ -134,5 +140,6 @@ def _map_google_book(volume: dict) -> BookResponse:
         ratings_count=volume.get("ratingsCount"),
         thumbnail=volume.get("imageLinks", {}).get("thumbnail"),
         ai_summary=None,
+        book_dna=None,
         source="Google Books",
     )
