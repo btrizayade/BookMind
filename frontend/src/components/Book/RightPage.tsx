@@ -70,7 +70,7 @@ function RightPage({ book }: Props) {
           rel="noreferrer"
           className="preview-link"
         >
-          Read Preview →
+          Read Preview
         </a>
 
       )}

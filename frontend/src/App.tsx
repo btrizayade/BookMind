@@ -56,7 +56,7 @@ function App() {
             <div className="loading-card">
               <span className="loading-icon">📖</span>
               <h3>Buscando...</h3>
-              <p>Procurando o seu próximo livro...</p>
+              <p>Estamos procurando o seu próximo livro!</p>
             </div>
           ) : error ? (
             // Card de erro (mostra apenas o erro)
