@@ -12,5 +12,6 @@ export interface Book {
   ratings_count: number | null;
   thumbnail: string | null;
   ai_summary: string | null;
+  book_dna: Record<string, number> | null;
   source: string;
 }

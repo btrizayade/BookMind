@@ -3,6 +3,7 @@ import os
 
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
 
 from app.schemas.book import BookResponse
 
@@ -11,7 +12,16 @@ load_dotenv()
 
 
 client = genai.Client(
-    api_key=os.getenv("GEMINI_API_KEY")
+    api_key=os.getenv("GEMINI_API_KEY"),
+    http_options=types.HttpOptions(
+        timeout=20000,
+        retry_options=types.HttpRetryOptions(
+            attempts=3,
+            initial_delay=1,
+            max_delay=10,
+            http_status_codes=[503, 504],
+        ),
+    ),
 )
 
 
@@ -90,7 +100,7 @@ SUMMARY RULES:
 
 - Write the summary in English.
 - Return EXACTLY five bullet points.
-- Start every bullet with "-".
+- Start every bullet with "•".
 - Maximum 15 words per bullet.
 - Focus on what the reader will learn, experience or gain.
 - Return exactly five bullets.
@@ -121,11 +131,6 @@ Use exactly this structure:
         response = client.models.generate_content(
             model="gemini-3.5-flash",
             contents=prompt,
-            config={
-                "http_options": {
-                    "timeout": 10000,
-                }
-            },
         )
 
         if not response.text:

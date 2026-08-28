@@ -3,6 +3,7 @@ import "./Book.css";
 import openBook from "../../assets/open-book.png";
 import LeftPage from "./LeftPage";
 import RightPage from "./RightPage";
+import BookDNA from "./BookDNA";
 
 import type { Book } from "../../types/book";
 
@@ -27,10 +28,12 @@ function BookView({ book }: Props) {
         </div>
 
         <div className="right-page">
-            <RightPage book={book} />
+          <RightPage book={book} />
         </div>
 
       </div>
+
+      <BookDNA dna={book.book_dna} />
 
     </div>
   );
