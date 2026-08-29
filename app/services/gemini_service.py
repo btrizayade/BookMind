@@ -29,11 +29,15 @@ def generate_book_analysis(book: BookResponse) -> dict | None:
     prompt = f"""
 You are an expert book reviewer and literary analyst.
 
-Analyze the book below and return:
-1. A concise explanation of why someone should read it.
-2. A Book DNA representing how strongly the book belongs to each category.
+Analyze the book below and return three things:
 
-Book title:
+1. A concise explanation of why someone should read it.
+2. A Book DNA representing how strongly the book belongs to each genre category.
+3. A Reading Profile representing the characteristics of the reading experience.
+
+BOOK INFORMATION
+
+Title:
 {book.title}
 
 Authors:
@@ -54,7 +58,10 @@ Pages:
 Description:
 {book.description or "No description available."}
 
-BOOK DNA CATEGORIES:
+
+BOOK DNA
+
+Evaluate how strongly the book belongs to each of these seven categories.
 
 1. romance
 2. fantasy_romantasy
@@ -64,7 +71,10 @@ BOOK DNA CATEGORIES:
 6. personal_development_nonfiction
 7. young_adult
 
-SCORING:
+
+BOOK DNA SCORING
+
+Score each category from 0 to 100.
 
 0-10:
 Almost completely absent.
@@ -84,7 +94,8 @@ Major or dominant element.
 91-100:
 One of the defining characteristics of the book.
 
-IMPORTANT:
+
+BOOK DNA IMPORTANT RULES
 
 - Judge each category independently.
 - A book can score highly in multiple categories.
@@ -94,27 +105,94 @@ IMPORTANT:
 - Young Adult refers to the target audience, not simply the age of the characters.
 - Personal Development & Nonfiction should score very low for fictional works.
 - Fantasy & Romantasy should score based on actual fantasy elements, not simply romance.
-- Horror should reflect genuine horror/horror-related elements, not simply darkness or tragedy.
+- Horror should reflect genuine horror or horror-related elements, not simply darkness or tragedy.
 
-SUMMARY RULES:
+
+READING PROFILE
+
+Evaluate the following characteristics of the book's reading experience.
+
+Score each characteristic independently from 0 to 100.
+
+1. emotional
+2. mysterious
+3. easy_to_read
+4. tearjerker
+5. dark
+6. intellectually_challenging
+7. relaxing
+8. thought_provoking
+9. wholesome
+
+
+READING PROFILE DEFINITIONS
+
+emotional:
+How strongly the book is likely to evoke emotions such as love, sadness, empathy or emotional attachment.
+
+mysterious:
+How strongly the book creates curiosity, unanswered questions, secrets or a sense of mystery.
+
+easy_to_read:
+How accessible the book is in terms of language, narrative structure and overall reading difficulty.
+
+tearjerker:
+How strongly the book is likely to provoke sadness, emotional distress or tears.
+
+dark:
+How strongly the book contains dark themes, atmosphere, subject matter or disturbing elements.
+
+intellectually_challenging:
+How strongly the book challenges the reader through complex ideas, themes, structure or interpretation.
+
+relaxing:
+How calm, comforting, gentle or low-intensity the overall reading experience is.
+
+thought_provoking:
+How strongly the book encourages reflection, interpretation or deeper consideration of ideas and themes.
+
+wholesome:
+How strongly the book contains warmth, kindness, comfort, optimism, hope or uplifting elements.
+
+
+READING PROFILE IMPORTANT RULES
+
+- Judge each characteristic independently.
+- Base the scores on the actual themes, tone, narrative style and reading experience of the book.
+- Do not assume a characteristic is present simply because the book belongs to a related genre.
+- A book can score highly in multiple characteristics.
+- "easy_to_read" refers to reading accessibility, not whether the story is simple or lacking depth.
+- "tearjerker" refers specifically to the likelihood of provoking tears or strong sadness.
+- "dark" refers to dark themes, atmosphere or subject matter.
+- "intellectually_challenging" refers to complexity of ideas, themes, structure or interpretation.
+- "relaxing" refers to the overall emotional intensity and comfort of the reading experience.
+- "thought_provoking" refers to the extent to which the book encourages reflection or deeper thinking.
+- "wholesome" refers to warmth, kindness, comfort, optimism or uplifting elements.
+- Do not give high scores to characteristics that are only weakly supported by the book.
+
+
+SUMMARY RULES
 
 - Write the summary in English.
 - Return EXACTLY five bullet points.
 - Start every bullet with "•".
 - Maximum 15 words per bullet.
 - Focus on what the reader will learn, experience or gain.
+- Do not reveal major plot twists or endings.
 - Return exactly five bullets.
 
-RETURN FORMAT:
+
+RETURN FORMAT
 
 Return ONLY valid JSON.
+
 Do not use Markdown.
 Do not add explanations outside the JSON.
-
-Use exactly this structure:
+Do not add extra fields.
+Use exactly the structure below:
 
 {{
-    "summary": "- First point\\n- Second point\\n- Third point\\n- Fourth point\\n- Fifth point",
+    "summary": "• First point\\n• Second point\\n• Third point\\n• Fourth point\\n• Fifth point",
     "book_dna": {{
         "romance": 0,
         "fantasy_romantasy": 0,
@@ -123,6 +201,17 @@ Use exactly this structure:
         "horror": 0,
         "personal_development_nonfiction": 0,
         "young_adult": 0
+    }},
+    "reading_profile": {{
+        "emotional": 0,
+        "mysterious": 0,
+        "easy_to_read": 0,
+        "tearjerker": 0,
+        "dark": 0,
+        "intellectually_challenging": 0,
+        "relaxing": 0,
+        "thought_provoking": 0,
+        "wholesome": 0
     }}
 }}
 """
@@ -138,7 +227,11 @@ Use exactly this structure:
 
         result = json.loads(response.text)
 
-        if "summary" not in result or "book_dna" not in result:
+        if (
+            "summary" not in result
+            or "book_dna" not in result
+            or "reading_profile" not in result
+        ):
             print("⚠️ Gemini returned an incomplete response.")
             return None
 
@@ -165,9 +258,36 @@ Use exactly this structure:
                 )
                 return None
 
+        reading_profile = result["reading_profile"]
+
+        expected_reading_profile = {
+            "emotional",
+            "mysterious",
+            "easy_to_read",
+            "tearjerker",
+            "dark",
+            "intellectually_challenging",
+            "relaxing",
+            "thought_provoking",
+            "wholesome",
+        }
+
+        if set(reading_profile.keys()) != expected_reading_profile:
+            print("⚠️ Gemini returned invalid Reading Profile characteristics.")
+            return None
+
+        for characteristic, score in reading_profile.items():
+            if not isinstance(score, int) or not 0 <= score <= 100:
+                print(
+                    f"⚠️ Invalid Reading Profile score "
+                    f"for {characteristic}: {score}"
+                )
+                return None
+
         return {
             "summary": result["summary"],
             "book_dna": book_dna,
+            "reading_profile": reading_profile,
         }
 
     except Exception as error:

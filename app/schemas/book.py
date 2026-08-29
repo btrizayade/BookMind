@@ -16,4 +16,5 @@ class BookResponse(BaseModel):
     thumbnail: str | None = None
     ai_summary: str | None = None
     book_dna: dict[str, int] | None = None
+    reading_profile: dict[str, int] | None = None
     source: str

@@ -26,7 +26,11 @@ def search_books(title: str, db: Session):
 
         # Gera a análise apenas se o livro ainda não tiver
         # resumo ou Book DNA.
-        if not book.ai_summary or not book.book_dna:
+        if (
+            not book.ai_summary
+            or not book.book_dna
+            or not book.reading_profile
+        ):
             print("🤖 Gerando análise com IA...")
 
             analysis = generate_book_analysis(
@@ -49,6 +53,7 @@ def search_books(title: str, db: Session):
                     thumbnail=book.thumbnail,
                     ai_summary=book.ai_summary,
                     book_dna=book.book_dna,
+                    reading_profile=book.reading_profile,
                     source=book.source,
                 )
             )
@@ -60,6 +65,9 @@ def search_books(title: str, db: Session):
 
                 if analysis.get("book_dna"):
                     book.book_dna = analysis["book_dna"]
+
+                if analysis.get("reading_profile"):
+                    book.reading_profile = analysis["reading_profile"]
 
                 db.commit()
                 db.refresh(book)
@@ -86,6 +94,7 @@ def search_books(title: str, db: Session):
             thumbnail=book.thumbnail,
             ai_summary=book.ai_summary,
             book_dna=book.book_dna,
+            reading_profile=book.reading_profile,
             source=book.source,
         )
 
@@ -117,6 +126,7 @@ def search_books(title: str, db: Session):
     if analysis:
         book_response.ai_summary = analysis.get("summary")
         book_response.book_dna = analysis.get("book_dna")
+        book_response.reading_profile = analysis.get("reading_profile")
     else:
         print("⚠️ Análise com IA indisponível.")
 
@@ -141,5 +151,6 @@ def _map_google_book(volume: dict) -> BookResponse:
         thumbnail=volume.get("imageLinks", {}).get("thumbnail"),
         ai_summary=None,
         book_dna=None,
+        reading_profile=None,
         source="Google Books",
     )
