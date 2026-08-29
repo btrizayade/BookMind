@@ -208,6 +208,8 @@
 
     color:#722F37;
 
+    margin-top:10px;
+
     margin-bottom:10px;
 }
 
@@ -221,7 +223,7 @@
 .summary-text{
     margin:0;
 
-    font-size:.9rem;
+    font-size:.87rem;
 
     line-height:1.8;
 
@@ -274,7 +276,7 @@
 
     color:#722F37;
 
-    font-size:.8rem;
+    font-size:.77rem;
 }
 
 .preview-link{
@@ -288,7 +290,7 @@
 
     color:#8b5a4b;
 
-    font-weight:600;
+    font-weight:550;
 
     transition:.25s;
 }

@@ -8,8 +8,9 @@ function RightPage({ book }: Props) {
 
   const summary =
     book.ai_summary ??
-    book.description ??
-    "No description available for this book.";
+    (book.description
+      ? book.description.slice(0, 500) + "..."
+      : "No description available for this book.");
 
   const longText = summary.length > 250;
 
