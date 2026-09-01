@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-
+from app.services.gemini_service import generate_recommendation_reason
 from app.database.session import get_db
 from app.repositories.book_repository import BookRepository
+from app.schemas.book import BookResponse
 from app.schemas.recommendation import (
     RecommendationBook,
     RecommendationRequest,
@@ -60,6 +61,32 @@ def get_recommendations(
     recommendations = []
 
     for book, score in scored_books[:3]:
+        reason = generate_recommendation_reason(
+            book=BookResponse(
+                title=book.title,
+                authors=book.authors.split(", "),
+                publisher=book.publisher,
+                page_count=book.page_count,
+                published_year=book.published_year,
+                language=book.language,
+                categories=(
+                    book.categories.split(", ")
+                    if book.categories
+                    else []
+                ),
+                description=book.description,
+                preview_link=book.preview_link,
+                google_rating=book.google_rating,
+                ratings_count=book.ratings_count,
+                thumbnail=book.thumbnail,
+                ai_summary=book.ai_summary,
+                book_dna=book.book_dna,
+                reading_profile=book.reading_profile,
+                source=book.source,
+            ),
+            preferences=preferences,
+        )
+
         recommendations.append(
             RecommendationBook(
                 title=book.title,
@@ -68,7 +95,7 @@ def get_recommendations(
                 page_count=book.page_count,
                 published_year=book.published_year,
                 compatibility_score=score,
-                reason=None,
+                reason=reason,
             )
         )
 
