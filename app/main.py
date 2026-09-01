@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
 from app.routes.books import router as books_router
+from app.routes.recommendations import router as recommendations_router
 
 
 app = FastAPI()
@@ -32,3 +33,5 @@ def home():
 
 
 app.include_router(books_router)
+
+app.include_router(recommendations_router)
