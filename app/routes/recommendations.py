@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from app.services.gemini_service import generate_recommendation_reason
+
 from app.database.session import get_db
 from app.repositories.book_repository import BookRepository
 from app.schemas.book import BookResponse
@@ -9,6 +9,7 @@ from app.schemas.recommendation import (
     RecommendationRequest,
     RecommendationResponse,
 )
+from app.services.gemini_service import generate_recommendation_reasons
 from app.services.recommendation_service import (
     calculate_compatibility_score,
     matches_page_range,
@@ -19,6 +20,7 @@ router = APIRouter(
     prefix="/books",
     tags=["Recommendations"],
 )
+
 
 repository = BookRepository()
 
@@ -45,8 +47,8 @@ def get_recommendations(
         score = calculate_compatibility_score(
             book_dna=book.book_dna,
             reading_profile=book.reading_profile,
-        page_count=book.page_count,
-        preferences=preferences,
+            page_count=book.page_count,
+            preferences=preferences,
         )
 
         scored_books.append(
@@ -58,11 +60,13 @@ def get_recommendations(
         reverse=True,
     )
 
-    recommendations = []
+    top_books = scored_books[:3]
 
-    for book, score in scored_books[:3]:
-        reason = generate_recommendation_reason(
-            book=BookResponse(
+    books_for_reason = []
+
+    for book, _score in top_books:
+        books_for_reason.append(
+            BookResponse(
                 title=book.title,
                 authors=book.authors.split(", "),
                 publisher=book.publisher,
@@ -83,10 +87,17 @@ def get_recommendations(
                 book_dna=book.book_dna,
                 reading_profile=book.reading_profile,
                 source=book.source,
-            ),
-            preferences=preferences,
+            )
         )
 
+    reasons = generate_recommendation_reasons(
+        books=books_for_reason,
+        preferences=preferences,
+    )
+
+    recommendations = []
+
+    for book, score in top_books:
         recommendations.append(
             RecommendationBook(
                 title=book.title,
@@ -95,7 +106,7 @@ def get_recommendations(
                 page_count=book.page_count,
                 published_year=book.published_year,
                 compatibility_score=score,
-                reason=reason,
+                reason=reasons.get(book.title),
             )
         )
 

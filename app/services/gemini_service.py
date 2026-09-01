@@ -298,19 +298,19 @@ Use exactly the structure below:
         return None
 
 
-def generate_recommendation_reason(
-    book: BookResponse,
+def generate_recommendation_reasons(
+    books: list[BookResponse],
     preferences: RecommendationRequest,
-) -> str | None:
-    prompt = f"""
-You are a personalized book recommendation assistant.
+) -> dict[str, str]:
+    if not books:
+        return {}
 
-Your task is to explain why the user might enjoy this specific book.
+    books_information = []
 
-Use the book's characteristics and the user's preferences to create a concise,
-natural and personalized recommendation.
-
-BOOK INFORMATION
+    for index, book in enumerate(books, start=1):
+        books_information.append(
+            f"""
+BOOK {index}
 
 Title:
 {book.title}
@@ -323,7 +323,16 @@ Book DNA:
 
 Reading Profile:
 {json.dumps(book.reading_profile or {}, ensure_ascii=False)}
+"""
+        )
 
+    books_text = "\n".join(books_information)
+
+    prompt = f"""
+You are a personalized book recommendation assistant.
+
+Your task is to generate one concise personalized reason for each recommended
+book based on the user's preferences and each book's characteristics.
 
 USER PREFERENCES
 
@@ -340,57 +349,71 @@ Page Range:
 {preferences.page_range}
 
 
-HOW TO GENERATE THE REASON
+BOOKS
 
-1. Identify the strongest characteristics of the book that match the user's preferences.
+{books_text}
 
-2. Use the Book DNA to identify relevant genre compatibility.
 
-3. Use the Reading Profile to identify relevant emotional, thematic or reading-experience compatibility.
+HOW TO GENERATE THE REASONS
 
-4. Mention only characteristics that are meaningfully supported by the book's scores.
+For each book:
 
-5. Focus on WHY this book fits this particular reader, rather than describing the book generally.
+1. Identify the strongest characteristics that match the user's preferences.
 
-6. If several preferences match, naturally combine the strongest one or two matches.
+2. Use Book DNA to identify relevant genre compatibility.
+
+3. Use Reading Profile to identify relevant emotional, thematic or
+reading-experience compatibility.
+
+4. Mention only characteristics that are meaningfully supported by the scores.
+
+5. Focus on WHY this specific book fits this particular reader.
+
+6. If several characteristics match, naturally combine the strongest one or two.
+
+7. Each reason must be specific to its book.
+
+8. Reasons should be naturally varied and should not use the same sentence
+structure for every book.
+
+
+GENRE ACCURACY RULE
+
+Never describe a book as belonging to a genre if that genre's Book DNA score
+is below 50.
+
+If a genre score is below 50, do not mention that genre at all.
+
+Examples:
+
+- romance 80 → mentioning romance is allowed.
+- horror 25 → mentioning horror is forbidden.
+- fantasy_romantasy 5 → mentioning fantasy is forbidden.
+- thriller_mystery_crime 20 → mentioning thriller or mystery is forbidden.
+- young_adult 10 → mentioning young adult is forbidden.
 
 
 IMPORTANT RULES
 
-- Write in English.
-- Maximum 25 words.
-- Return exactly one sentence.
+- Write every reason in English.
+- Maximum 25 words per reason.
+- Each reason must contain exactly one sentence.
 - Do not summarize the plot.
 - Do not mention the compatibility score.
-- Do not mention the number of pages or the page range.
+- Do not mention the number of pages.
+- Do not mention the user's page range.
 - Do not mention that the user selected specific options.
 - Do not simply repeat the user's preferences.
-- Do not call the book a "classic".
+- Do not call any book a "classic".
 - Do not invent genres, themes, moods or characteristics.
 - Do not describe a characteristic as strong if its corresponding score is low.
+- Prefer Reading Profile characteristics over weak genre associations.
 - Do not use generic phrases such as "This book is a great choice."
 - Do not use generic phrases such as "You will love this book."
-- Do not describe the book as belonging to a genre unless that genre has a Book DNA score of at least 50.
-- Make the reason specific to this book.
-- Make the wording natural and varied between recommendations.
-
-
-EXAMPLES
-
-Good:
-"Its intense emotional themes and dark atmosphere make it a strong match for readers seeking passionate, thought-provoking stories."
-
-Good:
-"With its reflective themes and emotional depth, this novel suits readers looking for an intellectually engaging and moving experience."
-
-Bad:
-"This 332-page classic is a great choice for your emotional reading preference."
-
-Bad:
-"You chose romance and emotional, so this romantic book is perfect for you."
-
-Bad:
-"This book is a great choice because it is emotional and interesting."
+- Make every reason specific to its book.
+- Return one reason for every book provided.
+- Do not omit any book.
+- Do not create reasons for books that were not provided.
 
 
 RETURN FORMAT
@@ -404,7 +427,12 @@ Do not add extra fields.
 Use exactly this structure:
 
 {{
-    "reason": "One concise sentence explaining why the user might enjoy this book."
+    "reasons": [
+        {{
+            "title": "Exact book title",
+            "reason": "One concise sentence explaining why the user might enjoy this book."
+        }}
+    ]
 }}
 """
 
@@ -415,21 +443,46 @@ Use exactly this structure:
         )
 
         if not response.text:
-            return None
+            return {}
 
         result = json.loads(response.text)
 
-        reason = result.get("reason")
+        reasons = result.get("reasons")
 
-        if not isinstance(reason, str) or not reason.strip():
-            print("⚠️ Gemini returned an invalid recommendation reason.")
-            return None
+        if not isinstance(reasons, list):
+            print("⚠️ Gemini returned invalid recommendation reasons.")
+            return {}
 
-        return reason.strip()
+        valid_titles = {book.title for book in books}
+        reason_map: dict[str, str] = {}
+
+        for item in reasons:
+            if not isinstance(item, dict):
+                continue
+
+            title = item.get("title")
+            reason = item.get("reason")
+
+            if (
+                not isinstance(title, str)
+                or not isinstance(reason, str)
+                or not reason.strip()
+            ):
+                continue
+
+            if title not in valid_titles:
+                print(
+                    f"⚠️ Gemini returned a reason for an unknown book: {title}"
+                )
+                continue
+
+            reason_map[title] = reason.strip()
+
+        return reason_map
 
     except Exception as error:
         print(
-            f"⚠️ Gemini unavailable while generating recommendation reason: "
+            f"⚠️ Gemini unavailable while generating recommendation reasons: "
             f"{error}"
         )
-        return None
+        return {}
