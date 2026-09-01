@@ -73,4 +73,9 @@ class Book(Base):
         nullable=True,
     )
 
+    reading_profile: Mapped[dict | None] = mapped_column(
+    JSON,
+    nullable=True,
+    )
+
     source: Mapped[str] = mapped_column(String)

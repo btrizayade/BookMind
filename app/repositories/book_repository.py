@@ -1,6 +1,7 @@
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
+from app.models import book
 from app.models.book import Book
 from app.schemas.book import BookResponse
 
@@ -8,6 +9,11 @@ from app.schemas.book import BookResponse
 class BookRepository:
 
     def save(self, db: Session, book: BookResponse) -> Book:
+        existing_book = self.get_by_title(db, book.title)
+
+        if existing_book:
+            return existing_book
+
         db_book = Book(
             title=book.title,
             authors=", ".join(book.authors),
@@ -23,6 +29,7 @@ class BookRepository:
             thumbnail=book.thumbnail,
             ai_summary=book.ai_summary,
             book_dna=book.book_dna,
+            reading_profile=book.reading_profile,
             source=book.source,
         )
 
@@ -37,4 +44,17 @@ class BookRepository:
             db.query(Book)
             .filter(func.lower(Book.title) == title.lower())
             .first()
+        )
+
+    def get_books_for_recommendation(
+        self,
+        db: Session,
+    ) -> list[Book]:
+        return (
+            db.query(Book)
+            .filter(
+                Book.book_dna.isnot(None),
+                Book.reading_profile.isnot(None),
+            )
+            .all()
         )
