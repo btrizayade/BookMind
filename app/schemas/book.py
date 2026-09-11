@@ -14,7 +14,14 @@ class BookResponse(BaseModel):
     google_rating: float | None = None
     ratings_count: int | None = None
     thumbnail: str | None = None
+
     ai_summary: str | None = None
+
     book_dna: dict[str, int] | None = None
     reading_profile: dict[str, int] | None = None
+
+    themes: list[str] | None = None
+    atmosphere: list[str] | None = None
+    story_elements: list[str] | None = None
+
     source: str

@@ -25,7 +25,9 @@ repository = BookRepository()
 # NORMALIZAÇÃO
 # ============================================================
 
-def _normalize_title(text: str | None) -> str:
+def _normalize_title(
+    text: str | None,
+) -> str:
     """
     Normaliza títulos para facilitar a comparação.
     """
@@ -61,7 +63,9 @@ def _normalize_title(text: str | None) -> str:
     return text
 
 
-def _normalize_author(text: str | None) -> str:
+def _normalize_author(
+    text: str | None,
+) -> str:
     """
     Normaliza nomes de autores para facilitar a comparação.
     """
@@ -132,6 +136,9 @@ def _book_model_to_response(
         ai_summary=book.ai_summary,
         book_dna=book.book_dna,
         reading_profile=book.reading_profile,
+        themes=book.themes,
+        atmosphere=book.atmosphere,
+        story_elements=book.story_elements,
         source=book.source,
     )
 
@@ -274,10 +281,11 @@ def search_books(
     2. Se os dados básicos estiverem incompletos,
        tenta completar com Google Books.
     3. Se ainda faltar informação, usa Open Library.
-    4. Se não existir no banco, consulta Google Books.
-    5. Usa Open Library como fallback de metadados.
-    6. Gera Book DNA + Reading Profile com Gemini.
-    7. Salva o livro.
+    4. Busca subjects no Open Library.
+    5. Se não existir no banco, consulta Google Books.
+    6. Usa Open Library para metadados complementares.
+    7. Gera análise completa com Gemini.
+    8. Salva o livro.
     """
 
     # ========================================================
@@ -295,15 +303,15 @@ def search_books(
             "📚 Livro encontrado no banco."
         )
 
+        # ====================================================
+        # COMPLETAR METADADOS
+        # ====================================================
+
         missing_basic_data = (
             not book.authors
             or not book.authors.strip()
             or not book.page_count
         )
-
-        # ====================================================
-        # COMPLETAR METADADOS
-        # ====================================================
 
         if missing_basic_data:
 
@@ -344,13 +352,15 @@ def search_books(
                             google_book.authors
                         )
 
-                    if (
-                        google_book.page_count
-                        and not book.page_count
-                    ):
-                        book.page_count = (
-                            google_book.page_count
-                        )
+                    if google_book.page_count:
+                        if (
+                            not book.page_count
+                            or not book.authors
+                            or not book.authors.strip()
+                        ):
+                            book.page_count = (
+                                google_book.page_count
+                            )
 
                     if (
                         google_book.publisher
@@ -486,7 +496,11 @@ def search_books(
                             openlibrary_book.get(
                                 "page_count"
                             )
-                            and not book.page_count
+                            and (
+                                not book.page_count
+                                or not book.authors
+                                or not book.authors.strip()
+                            )
                         ):
                             book.page_count = (
                                 openlibrary_book[
@@ -517,12 +531,45 @@ def search_books(
                         f"Open Library: {exc}"
                     )
 
-            # ------------------------------------------------
-            # SALVA OS METADADOS COMPLETADOS
-            # ------------------------------------------------
+        # ====================================================
+        # OPEN LIBRARY — SUBJECTS
+        # ====================================================
 
-            db.commit()
-            db.refresh(book)
+        subjects = []
+
+        try:
+            print(
+                "📚 Consultando Open Library "
+                "para subjects..."
+            )
+
+            openlibrary_book = (
+                search_book_metadata(
+                    title,
+                    author,
+                )
+            )
+
+            if openlibrary_book:
+                subjects = (
+                    openlibrary_book.get(
+                        "subjects",
+                        [],
+                    )
+                )
+
+        except Exception as exc:
+            print(
+                f"⚠️ Erro ao buscar subjects "
+                f"no Open Library: {exc}"
+            )
+
+        # ====================================================
+        # SALVA METADADOS
+        # ====================================================
+
+        db.commit()
+        db.refresh(book)
 
         # ====================================================
         # GEMINI
@@ -532,13 +579,21 @@ def search_books(
             not book.ai_summary
             or not book.book_dna
             or not book.reading_profile
+            or not book.themes
+            or not book.atmosphere
+            or not book.story_elements
         ):
             print(
-                "🤖 Gerando análise com IA..."
+                "🤖 Gerando análise completa com IA..."
+            )
+
+            book_response = _book_model_to_response(
+                book
             )
 
             analysis = generate_book_analysis(
-                _book_model_to_response(book)
+                book_response,
+                subjects=subjects,
             )
 
             if analysis:
@@ -559,6 +614,25 @@ def search_books(
                     book.reading_profile = (
                         analysis[
                             "reading_profile"
+                        ]
+                    )
+
+                if analysis.get("themes"):
+                    book.themes = (
+                        analysis["themes"]
+                    )
+
+                if analysis.get("atmosphere"):
+                    book.atmosphere = (
+                        analysis["atmosphere"]
+                    )
+
+                if analysis.get(
+                    "story_elements"
+                ):
+                    book.story_elements = (
+                        analysis[
+                            "story_elements"
                         ]
                     )
 
@@ -602,9 +676,11 @@ def search_books(
             "📚 Tentando Open Library..."
         )
 
-        openlibrary_book = search_book_metadata(
-            title,
-            author,
+        openlibrary_book = (
+            search_book_metadata(
+                title,
+                author,
+            )
         )
 
         if not openlibrary_book:
@@ -642,6 +718,9 @@ def search_books(
             ai_summary=None,
             book_dna=None,
             reading_profile=None,
+            themes=None,
+            atmosphere=None,
+            story_elements=None,
             source="Open Library",
         )
 
@@ -660,87 +739,88 @@ def search_books(
     )
 
     # ========================================================
-    # 4. OPEN LIBRARY PARA COMPLETAR
+    # 4. OPEN LIBRARY — COMPLETAR + SUBJECTS
     # ========================================================
 
-    if (
-        not book_response.authors
-        or not book_response.page_count
-    ):
+    openlibrary_book = None
+    subjects = []
 
+    try:
         print(
-            "🔎 Metadados incompletos no "
-            "Google Books."
+            "📚 Consultando Open Library "
+            "para dados complementares..."
         )
 
-        try:
-
-            print(
-                "📚 Consultando Open Library..."
+        openlibrary_book = (
+            search_book_metadata(
+                title,
+                author,
             )
+        )
 
-            openlibrary_book = (
-                search_book_metadata(
-                    title,
-                    author,
+        if openlibrary_book:
+
+            subjects = (
+                openlibrary_book.get(
+                    "subjects",
+                    [],
                 )
             )
 
-            if openlibrary_book:
-
-                if (
-                    not book_response.authors
-                    and openlibrary_book.get(
+            if (
+                not book_response.authors
+                and openlibrary_book.get(
+                    "authors"
+                )
+            ):
+                book_response.authors = (
+                    openlibrary_book[
                         "authors"
-                    )
-                ):
-                    book_response.authors = (
-                        openlibrary_book[
-                            "authors"
-                        ]
-                    )
-
-                if (
-                    not book_response.page_count
-                    and openlibrary_book.get(
-                        "page_count"
-                    )
-                ):
-                    book_response.page_count = (
-                        openlibrary_book[
-                            "page_count"
-                        ]
-                    )
-
-                if (
-                    not book_response.published_year
-                    and openlibrary_book.get(
-                        "published_year"
-                    )
-                ):
-                    book_response.published_year = (
-                        openlibrary_book[
-                            "published_year"
-                        ]
-                    )
-
-                print(
-                    "✅ Metadados completados "
-                    "pelo Open Library."
+                    ]
                 )
 
-        except Exception as exc:
+            if (
+                not book_response.page_count
+                and openlibrary_book.get(
+                    "page_count"
+                )
+            ):
+                book_response.page_count = (
+                    openlibrary_book[
+                        "page_count"
+                    ]
+                )
+
+            if (
+                not book_response.published_year
+                and openlibrary_book.get(
+                    "published_year"
+                )
+            ):
+                book_response.published_year = (
+                    openlibrary_book[
+                        "published_year"
+                    ]
+                )
+
             print(
-                f"⚠️ Erro ao consultar "
-                f"Open Library: {exc}"
+                "✅ Metadados complementares "
+                "do Open Library processados."
             )
+
+    except Exception as exc:
+        print(
+            f"⚠️ Erro ao consultar "
+            f"Open Library: {exc}"
+        )
 
     # ========================================================
-    # 5. GEMINI
+    # 5. GEMINI — ANÁLISE COMPLETA
     # ========================================================
 
     analysis = generate_book_analysis(
-        book_response
+        book_response,
+        subjects=subjects,
     )
 
     if analysis:
@@ -756,6 +836,20 @@ def search_books(
         book_response.reading_profile = (
             analysis.get(
                 "reading_profile"
+            )
+        )
+
+        book_response.themes = (
+            analysis.get("themes")
+        )
+
+        book_response.atmosphere = (
+            analysis.get("atmosphere")
+        )
+
+        book_response.story_elements = (
+            analysis.get(
+                "story_elements"
             )
         )
 
@@ -1434,5 +1528,8 @@ def _map_google_book(
         ai_summary=None,
         book_dna=None,
         reading_profile=None,
+        themes=None,
+        atmosphere=None,
+        story_elements=None,
         source="Google Books",
     )

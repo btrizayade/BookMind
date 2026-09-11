@@ -54,6 +54,9 @@ class BookRepository:
             ai_summary=book.ai_summary,
             book_dna=book.book_dna,
             reading_profile=book.reading_profile,
+            themes=book.themes,
+            atmosphere=book.atmosphere,
+            story_elements=book.story_elements,
             source=book.source,
         )
 
@@ -120,10 +123,6 @@ class BookRepository:
         if not normalized_title:
             return None
 
-        # Busca candidatos no banco.
-        #
-        # Não usamos apenas lower() aqui porque precisamos
-        # considerar pontuação e pequenas variações de título.
         books = (
             db.query(Book)
             .all()
@@ -168,15 +167,161 @@ class BookRepository:
         self,
         db: Session,
     ) -> list[Book]:
+        """
+        Retorna os livros disponíveis para recomendação.
 
-        return (
+        Apenas livros com:
+        - Book DNA
+        - Reading Profile
+        - autor
+        - número de páginas
+
+        são considerados.
+
+        Também remove registros duplicados ou equivalentes,
+        mantendo o registro com os melhores metadados.
+        """
+
+        books = (
             db.query(Book)
             .filter(
                 Book.book_dna.isnot(None),
                 Book.reading_profile.isnot(None),
+                Book.authors.isnot(None),
+                Book.authors != "",
+                Book.page_count.isnot(None),
             )
             .all()
         )
+
+        unique_books: dict[str, Book] = {}
+
+        for book in books:
+
+            key = self._recommendation_book_key(
+                book
+            )
+
+            existing_book = unique_books.get(key)
+
+            if existing_book is None:
+                unique_books[key] = book
+                continue
+
+            if self._book_quality_score(
+                book
+            ) > self._book_quality_score(
+                existing_book
+            ):
+                unique_books[key] = book
+
+        return list(
+            unique_books.values()
+        )
+
+    # ========================================================
+    # RECOMMENDATION BOOK KEY
+    # ========================================================
+
+    def _recommendation_book_key(
+        self,
+        book: Book,
+    ) -> str:
+        """
+        Cria uma chave para identificar registros que
+        representam o mesmo livro.
+
+        Exemplo:
+
+            The Metamorphosis
+            The Metamorphosis, by Franz Kafka
+
+        tornam-se a mesma chave quando o autor corresponde.
+        """
+
+        normalized_title = self._normalize_title(
+            book.title
+        )
+
+        normalized_author = self._normalize_author(
+            book.authors
+        )
+
+        if (
+            normalized_title
+            and normalized_author
+            and " by " in normalized_title
+        ):
+            without_author = (
+                self._remove_author_suffix(
+                    normalized_title,
+                    normalized_author,
+                )
+            )
+
+            if without_author:
+                normalized_title = without_author
+
+        return (
+            f"{normalized_title}|"
+            f"{normalized_author}"
+        )
+
+    # ========================================================
+    # BOOK QUALITY SCORE
+    # ========================================================
+
+    @staticmethod
+    def _book_quality_score(
+        book: Book,
+    ) -> int:
+        """
+        Mede a qualidade/completude dos metadados de um
+        registro.
+
+        Registros com título correto, autor, páginas,
+        thumbnail e demais metadados recebem prioridade.
+        """
+
+        score = 0
+
+        if book.title:
+            score += 1
+
+        if book.authors:
+            score += 3
+
+        if book.page_count:
+            score += 3
+
+        if book.thumbnail:
+            score += 2
+
+        if book.publisher:
+            score += 1
+
+        if book.published_year:
+            score += 1
+
+        if book.description:
+            score += 1
+
+        if book.categories:
+            score += 1
+
+        if book.preview_link:
+            score += 1
+
+        if book.ai_summary:
+            score += 1
+
+        if book.book_dna:
+            score += 2
+
+        if book.reading_profile:
+            score += 2
+
+        return score
 
     # ========================================================
     # TITLE NORMALIZATION
@@ -217,14 +362,12 @@ class BookRepository:
 
         title = title.lower()
 
-        # Remove pontuação.
         title = re.sub(
             r"[^\w\s]",
             " ",
             title,
         )
 
-        # Remove espaços duplicados.
         title = re.sub(
             r"\s+",
             " ",
@@ -300,24 +443,14 @@ class BookRepository:
             return False
 
         # ----------------------------------------------------
-        # Se os títulos já são iguais depois da normalização,
-        # são o mesmo livro.
+        # Títulos iguais depois da normalização.
         # ----------------------------------------------------
 
         if normalized_searched == normalized_database:
             return True
 
         # ----------------------------------------------------
-        # Remove "by autor" SOMENTE quando o autor realmente
-        # corresponde ao autor pesquisado.
-        #
-        # Exemplo:
-        #
-        # "the metamorphosis by franz kafka"
-        #
-        # vira:
-        #
-        # "the metamorphosis"
+        # Remove "by autor" quando corresponde.
         # ----------------------------------------------------
 
         database_without_author = (
@@ -333,10 +466,6 @@ class BookRepository:
                 normalized_searched_author,
             )
         )
-
-        # ----------------------------------------------------
-        # Compara novamente.
-        # ----------------------------------------------------
 
         if (
             database_without_author
@@ -358,15 +487,6 @@ class BookRepository:
         """
         Remove um sufixo "by Autor" somente quando o texto
         realmente termina com o autor informado.
-
-        Exemplo:
-
-            the metamorphosis by franz kafka
-            franz kafka
-
-        retorna:
-
-            the metamorphosis
         """
 
         if not title or not author:
@@ -455,11 +575,12 @@ class BookRepository:
             return False
 
         # ----------------------------------------------------
-        # Verifica se todos os termos relevantes do autor
-        # pesquisado aparecem no autor armazenado.
+        # Termos do autor pesquisado aparecem no armazenado.
         # ----------------------------------------------------
 
-        if searched_parts.issubset(database_parts):
+        if searched_parts.issubset(
+            database_parts
+        ):
             return True
 
         # ----------------------------------------------------

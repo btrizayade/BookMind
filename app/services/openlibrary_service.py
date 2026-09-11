@@ -11,7 +11,9 @@ BASE_URL = "https://openlibrary.org/search.json"
 # NORMALIZAÇÃO
 # ============================================================
 
-def _normalize_text(text: str | None) -> str:
+def _normalize_text(
+    text: str | None,
+) -> str:
     """
     Normaliza texto para facilitar comparações.
     """
@@ -174,10 +176,11 @@ def search_book_metadata(
             "authors": list[str],
             "page_count": int | None,
             "published_year": str | None,
+            "subjects": list[str]
         }
 
-    O objetivo principal é completar dados que estejam
-    ausentes no Google Books.
+    O objetivo é fornecer metadados complementares para
+    completar informações e enriquecer a análise do livro.
     """
 
     params = {
@@ -187,7 +190,8 @@ def search_book_metadata(
             "title,"
             "author_name,"
             "number_of_pages_median,"
-            "first_publish_year"
+            "first_publish_year,"
+            "subject"
         ),
     }
 
@@ -264,11 +268,17 @@ def search_book_metadata(
             "number_of_pages_median"
         )
 
+        subjects = doc.get(
+            "subject",
+            [],
+        )
+
         candidates.append(
             (
                 author_match,
                 title_score,
                 bool(page_count),
+                bool(subjects),
                 doc,
             )
         )
@@ -284,16 +294,18 @@ def search_book_metadata(
     # 1. autor compatível
     # 2. título mais parecido
     # 3. presença de número de páginas
+    # 4. presença de subjects
     candidates.sort(
         key=lambda candidate: (
             candidate[0],
             candidate[1],
             candidate[2],
+            candidate[3],
         ),
         reverse=True,
     )
 
-    best_doc = candidates[0][3]
+    best_doc = candidates[0][4]
 
     result_authors = best_doc.get(
         "author_name",
@@ -307,6 +319,25 @@ def search_book_metadata(
     result_year = best_doc.get(
         "first_publish_year"
     )
+
+    result_subjects = best_doc.get(
+        "subject",
+        [],
+    )
+
+    # Remove subjects duplicados preservando a ordem.
+    unique_subjects = list(
+        dict.fromkeys(
+            subject.strip()
+            for subject in result_subjects
+            if isinstance(subject, str)
+            and subject.strip()
+        )
+    )
+
+    # Limitamos a quantidade para evitar mandar uma lista
+    # gigantesca para o Gemini.
+    unique_subjects = unique_subjects[:20]
 
     print(
         f"📚 Open Library encontrou: "
@@ -330,8 +361,16 @@ def search_book_metadata(
             f"{result_year}"
         )
 
+    if unique_subjects:
+        print(
+            f"   🏷️ Subjects encontrados: "
+            f"{len(unique_subjects)}"
+        )
+
     return {
-        "title": best_doc.get("title"),
+        "title": best_doc.get(
+            "title"
+        ),
         "authors": result_authors,
         "page_count": result_pages,
         "published_year": (
@@ -339,4 +378,5 @@ def search_book_metadata(
             if result_year
             else None
         ),
+        "subjects": unique_subjects,
     }

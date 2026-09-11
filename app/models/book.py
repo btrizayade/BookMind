@@ -78,4 +78,19 @@ class Book(Base):
     nullable=True,
     )
 
+    themes: Mapped[list[str] | None] = mapped_column(
+        JSON,
+        nullable=True,
+    )
+
+    atmosphere: Mapped[list[str] | None] = mapped_column(
+        JSON,
+        nullable=True,
+    )
+
+    story_elements: Mapped[list[str] | None] = mapped_column(
+        JSON,
+        nullable=True,
+    )
+
     source: Mapped[str] = mapped_column(String)
