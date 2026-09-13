@@ -383,13 +383,28 @@ def validate_recommendation_reason(
     return True
 
 
+def _first_matching_theme(book: BookResponse) -> str | None:
+    themes = book.themes or []
+    return themes[0] if themes else None
+
+
+def _first_matching_atmosphere(book: BookResponse) -> str | None:
+    atmosphere = book.atmosphere or []
+    return atmosphere[0] if atmosphere else None
+
+
+def _first_matching_story_element(book: BookResponse) -> str | None:
+    story_elements = book.story_elements or []
+    return story_elements[0] if story_elements else None
+
+
 def generate_fallback_reason(
     book: BookResponse,
     preferences: RecommendationRequest,
 ) -> str:
     """
-    Gera uma razão local simples quando o Gemini não
-    consegue responder.
+    Gera uma razão local específica quando o Gemini
+    não consegue responder.
     """
     profile = book.reading_profile or {}
 
@@ -401,10 +416,7 @@ def generate_fallback_reason(
                 book.page_count is not None
                 and book.page_count < 200
             ):
-                supported_preferences.append(
-                    "short"
-                )
-
+                supported_preferences.append("short")
             continue
 
         if profile.get(preference, 0) >= 50:
@@ -415,42 +427,67 @@ def generate_fallback_reason(
                 )
             )
 
+    mood_term = None
+
     if profile.get(preferences.mood, 0) >= 50:
-        supported_preferences.append(
-            MOOD_TERMS.get(
-                preferences.mood,
-                preferences.mood,
+        mood_term = MOOD_TERMS.get(
+            preferences.mood,
+            preferences.mood,
+        )
+
+    theme = _first_matching_theme(book)
+    atmosphere = _first_matching_atmosphere(book)
+    story_element = _first_matching_story_element(book)
+
+    if supported_preferences:
+        preference_text = supported_preferences[0]
+
+        if theme and atmosphere:
+            return (
+                f"Its {theme} themes and {atmosphere} atmosphere "
+                f"complement its {preference_text} reading experience."
             )
-        )
 
-    if not supported_preferences:
+        if theme:
+            return (
+                f"Its focus on {theme} complements its "
+                f"{preference_text} reading experience."
+            )
+
+        if story_element:
+            return (
+                f"Its {story_element} supports a "
+                f"{preference_text} reading experience."
+            )
+
+    if mood_term and theme:
         return (
-            "Its themes and reading experience offer "
-            "a thoughtful match for readers with similar preferences."
+            f"Its {theme} themes create a {mood_term} "
+            "reading experience."
         )
 
-    unique_preferences = []
-
-    for item in supported_preferences:
-        if item not in unique_preferences:
-            unique_preferences.append(item)
-
-    if len(unique_preferences) >= 2:
-        first = unique_preferences[0]
-        second = unique_preferences[1]
-
+    if mood_term and atmosphere:
         return (
-            f"Its {first} and {second} qualities "
-            "align with this reading experience."
+            f"Its {atmosphere} atmosphere supports a "
+            f"{mood_term} reading experience."
         )
 
-    first = unique_preferences[0]
+    if theme and story_element:
+        return (
+            f"Its {theme} themes and {story_element} "
+            "make the reading experience distinctive."
+        )
+
+    if theme:
+        return (
+            f"Its focus on {theme} gives the book a "
+            "distinctive reading experience."
+        )
 
     return (
-        f"Its {first} qualities "
-        "align well with this reading experience."
+        "Its themes and story elements create a distinctive "
+        "reading experience."
     )
-
 
 def _fallback_reason_map(
     books: list[BookResponse],
@@ -1008,26 +1045,31 @@ HOW TO GENERATE THE REASONS
 
 For each book:
 
-1. Identify the strongest characteristics that match
-   the user's preferences.
+1. Identify the strongest characteristics that directly
+   match the user's selected genres, looking_for preferences,
+   and mood.
 
-2. Use Book DNA to identify legitimate genre compatibility.
+2. Use Book DNA only for the selected genres.
 
-3. Use Reading Profile for the reading-experience match.
+3. Use Reading Profile only for the selected looking_for
+   preferences and mood.
 
-4. Use themes, atmosphere, and story elements to make
-   the reason specific to that book.
+4. Do not use an unselected Reading Profile characteristic
+   as a reason, even if its score is high.
 
-5. Mention only characteristics that are meaningfully
-   supported by the supplied data.
+5. Use themes, atmosphere, and story elements only to make
+   the selected matches specific to that book.
 
-6. Prefer one or two strong matches rather than listing
-   every compatible characteristic.
+6. Never introduce an unrelated characteristic merely because
+   it is prominent in the book's data.
 
-7. Focus on WHY this particular book fits this reader,
+7. Prefer one or two strong matches rather than listing
+   additional true but unselected characteristics.
+
+8. Focus on WHY this particular book fits this reader,
    not on describing the book generally.
 
-8. Make reasons naturally varied.
+9. Make reasons naturally varied.
 
 
 GENRE ACCURACY RULES
@@ -1044,6 +1086,22 @@ GENRE ACCURACY RULES
 - Supernatural, gothic, tragic, or disturbing elements
   do not automatically imply horror or fantasy.
 - When uncertain, do not mention the genre.
+
+
+SPECIFICITY RULES
+
+- The reason must contain at least ONE concrete detail
+  from Themes, Atmosphere, or Story Elements.
+- Prefer combining ONE concrete book detail with ONE
+  supported reading-experience match.
+- Do not use generic structures such as:
+  "Its X qualities align with this reading experience."
+- Do not use generic claims such as:
+  "thoughtful match", "good fit", "great for readers",
+  "perfect for you", or "aligns well".
+- Different books must receive meaningfully different reasons.
+- Do not mention a characteristic without connecting it
+  to something specific about the book.
 
 
 IMPORTANT RULES
@@ -1065,6 +1123,25 @@ IMPORTANT RULES
 - Make the reason specific to the book.
 - Return exactly one reason for every provided book.
 - Return no additional books.
+- Never output internal field names such as:
+  romance,
+  fantasy_romantasy,
+  thriller_mystery_crime,
+  science_fiction,
+  personal_development_nonfiction,
+  young_adult,
+  emotional,
+  mysterious,
+  easy_to_read,
+  tearjerker,
+  short_book,
+  dark,
+  intellectually_challenging,
+  relaxing,
+  thought_provoking,
+  wholesome.
+- When referring to a genre or reading characteristic, use natural English wording instead of internal field names.
+- Avoid starting every reason with "This".
 
 
 OUTPUT

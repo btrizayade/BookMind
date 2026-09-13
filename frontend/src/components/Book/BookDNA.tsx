@@ -21,7 +21,7 @@ const categories = [
   },
   {
     key: "fantasy_romantasy",
-    name: "Fantasia & Romantasia",
+    name: "Fantasy & Romantasy",
     icon: fantasyIcon,
   },
   {
@@ -31,7 +31,7 @@ const categories = [
   },
   {
     key: "science_fiction",
-    name: "Ficção Científica",
+    name: "Science Fiction",
     icon: scifiIcon,
   },
   {
@@ -41,12 +41,12 @@ const categories = [
   },
   {
     key: "personal_development_nonfiction",
-    name: "Não Ficção",
+    name: "Non-Fiction",
     icon: nonfictionIcon,
   },
   {
     key: "young_adult",
-    name: "Jovem Adulto",
+    name: "Young Adult",
     icon: yaIcon,
   },
 ];
