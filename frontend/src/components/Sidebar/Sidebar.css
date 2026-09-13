@@ -1,136 +1,232 @@
-.sidebar{
+/* =====================================
+   SIDEBAR
+===================================== */
 
-    display:flex;
+.sidebar {
+    position: relative;
 
-    flex-direction:column;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 
-    justify-content:center;
+    width: 100%;
+    max-width: 360px;
+    min-height: 620px;
 
-    width:100%;
+    margin: auto;
 
-    max-width:360px;
+    padding: 20px;
 
-    margin:auto;
+    transition:
+        max-width 0.35s ease,
+        padding 0.35s ease,
+        min-height 0.35s ease;
+
+    overflow: visible;
 }
 
-/* ---------------- */
+/* =====================================
+   COLLAPSED SIDEBAR
+===================================== */
 
-.logo{
+.sidebar-collapsed {
+    max-width: 44px;
+    min-height: 100px;
 
-    width:220px;
+    padding: 0;
 
-    align-self:center;
-
-    margin-bottom:24px;
+    justify-content: center;
+    align-items: center;
 }
 
-/* ---------------- */
+/* =====================================
+   LOGO
+===================================== */
 
-.subtitle{
+.logo {
+    width: 175px;
 
-    text-align:center;
+    align-self: center;
 
-    color:#86675b;
-
-    font-size:17px;
-
-    line-height:1.6;
-
-    margin-bottom:34px;
+    margin-bottom: 10px;
 }
 
-/* ---------------- */
+/* =====================================
+   SUBTITLE
+===================================== */
 
-.divider{
+.subtitle {
+    text-align: center;
 
-    width:100%;
+    color: #86675b;
 
-    height:1px;
+    font-size: 13px;
 
-    background:#dbc9b7;
+    line-height: 1.6;
 
-    margin:28px 0;
+    margin-bottom: 10px;
 }
 
-/* ---------------- */
+/* =====================================
+   DIVIDER
+===================================== */
 
-.sidebar label{
+.divider {
+    width: 100%;
 
-    color:#6b4d43;
+    height: 1px;
 
-    font-weight:700;
+    background: #dbc9b7;
 
-    font-size:18px;
-
-    margin-bottom:10px;
+    margin: 15px 0;
 }
 
-/* ---------------- */
+/* =====================================
+   SEARCH LABEL
+===================================== */
 
-.sidebar input{
+.sidebar label {
+    color: #6b4d43;
 
-    width:100%;
+    font-weight: 700;
 
-    padding:16px;
+    font-size: 18px;
 
-    border-radius:14px;
-
-    border:1px solid #d9c2aa;
-
-    font-size:17px;
-
-    margin-bottom:18px;
-
-    background:white;
+    margin-bottom: 10px;
 }
 
-/* ---------------- */
+/* =====================================
+   SEARCH INPUT
+===================================== */
 
-.sidebar button{
+.sidebar input {
+    width: 100%;
 
-    width:100%;
+    padding: 16px;
 
-    padding:16px;
+    border-radius: 14px;
 
-    border:none;
+    border: 1px solid #d9c2aa;
 
-    border-radius:14px;
+    font-size: 17px;
 
-    background:linear-gradient(
+    margin-bottom: 18px;
+
+    background: white;
+}
+
+/* =====================================
+   SIDEBAR ACTION BUTTONS
+===================================== */
+
+.sidebar > button:not(.sidebar-toggle) {
+    width: 100%;
+
+    padding: 16px;
+
+    border: none;
+
+    border-radius: 14px;
+
+    background: linear-gradient(
         135deg,
         #8b5a4b,
         #c88f82
     );
 
-    color:white;
+    color: white;
 
-    font-weight:700;
+    font-weight: 500;
 
-    font-size:17px;
+    font-size: 17px;
 
-    cursor:pointer;
+    margin-bottom: 10px;
 
-    box-shadow:0 12px 25px rgba(139,90,75,.22);
+    cursor: pointer;
 
-    transition:.25s;
+    box-shadow: 0 12px 25px rgba(139, 90, 75, 0.22);
+
+    transition: 0.25s;
 }
 
-.sidebar button:hover{
-
-    transform:translateY(-2px);
+.sidebar > button:not(.sidebar-toggle):hover {
+    transform: translateY(-2px);
 }
 
-/* ---------------- */
+/* =====================================
+   SIDEBAR TOGGLE
+===================================== */
 
-.quote{
+.sidebar-toggle {
+    position: absolute;
 
-    text-align:center;
+    top: 50%;
 
-    color:#9d7b6f;
+    width: 20px;
+    height: 45px;
 
-    font-style:italic;
+    transform: translateY(-50%);
 
-    line-height:1.8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-    font-size:16px;
+    padding: 0;
+
+    border: 1px solid #dbc9b7;
+    border-radius: 0 14px 14px 0;
+
+    background: #fdf8f3;
+
+    color: #722f37;
+
+    font-size: 20px;
+    font-weight: 400;
+
+    line-height: 1;
+
+    cursor: pointer;
+
+    box-shadow: 5px 8px 18px rgba(0, 0, 0, 0.08);
+
+    z-index: 20;
+
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+/* botão enquanto sidebar está aberta */
+
+.sidebar-toggle-open {
+    right: -16px;
+}
+
+/* botão enquanto sidebar está recolhida */
+
+.sidebar-toggle-collapsed {
+    left: 0;
+}
+
+.sidebar-toggle:hover {
+    background: #efe3d2;
+
+    color: #5f262d;
+}
+
+/* =====================================
+   QUOTE
+===================================== */
+
+.quote {
+    text-align: center;
+
+    color: #9d7b6f;
+
+    font-style: italic;
+
+    line-height: 1.8;
+
+    font-size: 13px;
 }
