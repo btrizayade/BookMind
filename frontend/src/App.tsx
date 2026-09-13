@@ -23,11 +23,6 @@ function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] =
     useState(false);
 
-  // Força uma nova instância do Recommendations
-  // sempre que o usuário abrir essa tela novamente.
-  const [recommendationsKey, setRecommendationsKey] =
-    useState(0);
-
   const hasContent = mainContent !== null;
 
   async function handleSearch(event?: React.FormEvent) {
@@ -43,7 +38,6 @@ function App() {
 
     try {
       const data = await searchBook(title);
-
       setBook(data);
     } catch (err) {
       console.error(err);
@@ -59,13 +53,14 @@ function App() {
   }
 
   function handleOpenSearch() {
-    setMainContent("search");
+    const wasInitialState = !hasContent;
 
+    setMainContent("search");
     setBook(null);
     setLoading(false);
     setError("");
 
-    if (!hasContent) {
+    if (wasInitialState) {
       setIsSidebarCollapsed(true);
     }
   }
@@ -73,14 +68,10 @@ function App() {
   function handleRecommendations() {
     const wasInitialState = !hasContent;
 
-    // Cria uma nova instância do componente.
-    setRecommendationsKey((current) => current + 1);
-
     setMainContent("recommendations");
-
+    setError("");
     setBook(null);
     setLoading(false);
-    setError("");
 
     if (wasInitialState) {
       setIsSidebarCollapsed(true);
@@ -148,13 +139,12 @@ function App() {
           <main className="book-area">
             {mainContent === "recommendations" ? (
               <Recommendations
-                key={recommendationsKey}
                 onSelectBook={handleSelectRecommendedBook}
               />
             ) : loading ? (
               <div className="loading-card">
                 <span className="loading-icon">
-                  𓇼 ⋆.˚ ⋆.˚ 𓇼
+                  𓇼 ⋆.˚ .⋆ 𓇼
                 </span>
 
                 <h3>Searching...</h3>
@@ -165,9 +155,7 @@ function App() {
               </div>
             ) : error ? (
               <div className="error-card">
-                <div className="error-icon">
-                  📚
-                </div>
+                <div className="error-icon">📚</div>
 
                 <div>
                   <h3>Book not found</h3>
@@ -181,7 +169,6 @@ function App() {
                 className="search-content"
                 onSubmit={handleSearch}
               >
-                {/* Scrapbook decoration */}
                 <span
                   className="search-tape"
                   aria-hidden="true"

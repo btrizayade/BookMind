@@ -5,12 +5,12 @@ interface Props {
 }
 
 function RightPage({ book }: Props) {
-  const summary =
-    book.ai_summary ??
-    book.description ??
-    "No description available for this book.";
+  const hasAiSummary = Boolean(book.ai_summary?.trim());
 
-  const longText = summary.length > 250;
+  const longText =
+    hasAiSummary && book.ai_summary
+      ? book.ai_summary.length > 250
+      : false;
 
   return (
     <div className="page-content right-content">
@@ -71,15 +71,22 @@ function RightPage({ book }: Props) {
             aria-hidden="true"
           />
 
-          <p
-            className={
-              longText
-                ? "summary-text dropcap"
-                : "summary-text"
-            }
-          >
-            {summary}
-          </p>
+          {hasAiSummary ? (
+            <p
+              className={
+                longText
+                  ? "summary-text dropcap"
+                  : "summary-text"
+              }
+            >
+              {book.ai_summary}
+            </p>
+          ) : (
+            <p className="summary-unavailable">
+              AI analysis is currently unavailable.
+              Please try again later.
+            </p>
+          )}
 
           <span
             className="note-mark"
@@ -94,14 +101,17 @@ function RightPage({ book }: Props) {
 
       {book.categories && book.categories.length > 0 && (
         <div className="book-categories-section">
-          <div className="book-mini-divider" aria-hidden="true">
+          <div
+            className="book-mini-divider"
+            aria-hidden="true"
+          >
             <span>✿</span>
             <div />
             <span>✿</span>
           </div>
 
           <h3 className="section-title">
-            Bookshelf
+            From the Bookshelf
           </h3>
 
           <div className="categories">
@@ -135,7 +145,7 @@ function RightPage({ book }: Props) {
         className="book-handwritten-note"
         aria-hidden="true"
       >
-        found between the pages...
+        found between the pages ♡
       </span>
     </div>
   );
