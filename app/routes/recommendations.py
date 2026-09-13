@@ -25,6 +25,17 @@ router = APIRouter(
 repository = BookRepository()
 
 
+def split_csv(value: str | None) -> list[str]:
+    if not value:
+        return []
+
+    return [
+        item.strip()
+        for item in value.split(",")
+        if item.strip()
+    ]
+
+
 @router.post(
     "/recommendations",
     response_model=RecommendationResponse,
@@ -68,16 +79,12 @@ def get_recommendations(
         books_for_reason.append(
             BookResponse(
                 title=book.title,
-                authors=book.authors.split(", "),
+                authors=split_csv(book.authors),
                 publisher=book.publisher,
                 page_count=book.page_count,
                 published_year=book.published_year,
                 language=book.language,
-                categories=(
-                    book.categories.split(", ")
-                    if book.categories
-                    else []
-                ),
+                categories=split_csv(book.categories),
                 description=book.description,
                 preview_link=book.preview_link,
                 google_rating=book.google_rating,
@@ -86,6 +93,9 @@ def get_recommendations(
                 ai_summary=book.ai_summary,
                 book_dna=book.book_dna,
                 reading_profile=book.reading_profile,
+                themes=book.themes,
+                atmosphere=book.atmosphere,
+                story_elements=book.story_elements,
                 source=book.source,
             )
         )
@@ -101,7 +111,7 @@ def get_recommendations(
         recommendations.append(
             RecommendationBook(
                 title=book.title,
-                authors=book.authors.split(", "),
+                authors=split_csv(book.authors),
                 thumbnail=book.thumbnail,
                 page_count=book.page_count,
                 published_year=book.published_year,
@@ -111,5 +121,5 @@ def get_recommendations(
         )
 
     return RecommendationResponse(
-        recommendations=recommendations
+        recommendations=recommendations,
     )

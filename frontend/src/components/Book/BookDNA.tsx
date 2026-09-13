@@ -1,6 +1,5 @@
 import "./BookDNA.css";
 
-import dnaIcon from "../../assets/dna.png";
 import romanceIcon from "../../assets/romance.png";
 import fantasyIcon from "../../assets/fantasy.png";
 import thrillerIcon from "../../assets/thriller.png";
@@ -21,7 +20,7 @@ const categories = [
   },
   {
     key: "fantasy_romantasy",
-    name: "Fantasia & Romantasia",
+    name: "Fantasy & Romantasy",
     icon: fantasyIcon,
   },
   {
@@ -31,7 +30,7 @@ const categories = [
   },
   {
     key: "science_fiction",
-    name: "Ficção Científica",
+    name: "Science Fiction",
     icon: scifiIcon,
   },
   {
@@ -41,12 +40,12 @@ const categories = [
   },
   {
     key: "personal_development_nonfiction",
-    name: "Não Ficção",
+    name: "Non-Fiction",
     icon: nonfictionIcon,
   },
   {
     key: "young_adult",
-    name: "Jovem Adulto",
+    name: "Young Adult",
     icon: yaIcon,
   },
 ];
@@ -67,11 +66,6 @@ function BookDNA({ dna }: Props) {
     <section className="book-dna">
 
       <div className="book-dna-title">
-        <img
-          src={dnaIcon}
-          alt=""
-          className="dna-title-icon"
-        />
 
         <h3>BOOK DNA</h3>
       </div>

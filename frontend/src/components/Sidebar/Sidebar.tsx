@@ -2,48 +2,85 @@ import logo from "../../assets/logo.png";
 import "./Sidebar.css";
 
 interface SidebarProps {
-  title: string;
-  setTitle: (value: string) => void;
   onSearch: () => void;
+  onRecommendations: () => void;
+  hasContent: boolean;
+  isSidebarCollapsed: boolean;
+  onToggle: () => void;
 }
 
 function Sidebar({
-  title,
-  setTitle,
   onSearch,
+  onRecommendations,
+  hasContent,
+  isSidebarCollapsed,
+  onToggle,
 }: SidebarProps) {
   return (
-    <aside className="sidebar">
-      <img
-        src={logo}
-        alt="BookMind"
-        className="logo"
-      />
+    <aside
+      className={`sidebar ${
+        isSidebarCollapsed ? "sidebar-collapsed" : ""
+      }`}
+    >
+      {isSidebarCollapsed ? (
+        hasContent && (
+          <button
+            className="sidebar-toggle sidebar-toggle-collapsed"
+            onClick={onToggle}
+            aria-label="Expand sidebar"
+            type="button"
+          >
+            ›
+          </button>
+        )
+      ) : (
+        <>
+          {hasContent && (
+            <button
+              className="sidebar-toggle sidebar-toggle-open"
+              onClick={onToggle}
+              aria-label="Collapse sidebar"
+              type="button"
+            >
+              ‹
+            </button>
+          )}
 
-      <p className="subtitle">
-        Discover your next favorite book with AI.
-      </p>
+          <img
+            src={logo}
+            alt="BookMind"
+            className="logo"
+          />
 
-      <div className="divider"></div>
+          <p className="subtitle">
+            Discover your next favorite book with AI.
+          </p>
 
-      <label>Search book here...</label>
+          <div className="divider"></div>
 
-      <input
-        type="text"
-        placeholder="Type here..."
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
+          <button
+            className="sidebar-action"
+            onClick={onSearch}
+            type="button"
+          >
+            Search a Book
+          </button>
 
-      <button onClick={onSearch}>
-        Search
-      </button>
+          <button
+            className="sidebar-action"
+            onClick={onRecommendations}
+            type="button"
+          >
+            Find My Next Book
+          </button>
 
-      <div className="divider"></div>
+          <div className="divider"></div>
 
-      <span className="quote">
-        “A reader lives a thousand lives before he dies.”
-      </span>
+          <span className="quote">
+            “Books are a uniquely portable magic.”
+          </span>
+        </>
+      )}
     </aside>
   );
 }

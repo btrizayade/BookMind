@@ -1,4 +1,5 @@
 import type { Book } from "../../types/book";
+import BookDNA from "./BookDNA";
 
 interface Props {
   book: Book;
@@ -20,10 +21,14 @@ function formatLanguage(language: string | null) {
   return languages[language] ?? language;
 }
 
-function truncateTitle(title: string, maxLength = 60) {
+function truncateTitle(title: string, maxLength = 50) {
   if (title.length <= maxLength) return title;
 
-  return title.substring(0, title.lastIndexOf(" ", maxLength)) + "...";
+  const cut = title.lastIndexOf(" ", maxLength);
+
+  return (
+    title.substring(0, cut > 0 ? cut : maxLength) + "..."
+  );
 }
 
 function LeftPage({ book }: Props) {
@@ -35,6 +40,10 @@ function LeftPage({ book }: Props) {
 
   return (
     <div className="page-content">
+
+      {/* =========================================
+          BOOK HEADER
+      ========================================= */}
 
       <div className="book-header">
 
@@ -57,14 +66,21 @@ function LeftPage({ book }: Props) {
           </p>
 
           <p className="book-rating">
-            ⭐ {rating}
+            ★ {rating}
           </p>
 
         </div>
-
       </div>
 
+      {/* =========================================
+          DIVIDER
+      ========================================= */}
+
       <div className="book-divider"></div>
+
+      {/* =========================================
+          BOOK INFORMATION
+      ========================================= */}
 
       <div className="book-metadata">
 
@@ -109,6 +125,12 @@ function LeftPage({ book }: Props) {
         </div>
 
       </div>
+
+      {/* =========================================
+          BOOK DNA
+      ========================================= */}
+
+      <BookDNA dna={book.book_dna} />
 
     </div>
   );

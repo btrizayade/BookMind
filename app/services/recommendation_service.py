@@ -13,7 +13,7 @@ def calculate_genre_score(
         for genre in selected_genres
     ]
 
-    return sum(scores) / len(scores)
+    return max(scores)
 
 
 def calculate_profile_score(

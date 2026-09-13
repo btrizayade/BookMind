@@ -1,43 +1,38 @@
 /* =====================================
-   BOOK
+   BOOK CONTAINER
 ===================================== */
 
 .book-container {
     position: relative;
-
     display: flex;
     justify-content: center;
     align-items: center;
-
     width: 100%;
     height: 100%;
-
     transform: translateY(-70px);
 }
 
-/* ===================================== */
+/* =====================================
+   BOOK IMAGE
+===================================== */
 
 .book-image {
     display: block;
-
     width: 900px;
     max-width: 100%;
-
     height: auto;
-
     user-select: none;
     pointer-events: none;
 }
 
-/* ===================================== */
+/* =====================================
+   BOOK OVERLAY
+===================================== */
 
 .book-overlay {
     position: absolute;
-
     left: 50%;
     top: 45%;
-
-    /* desce o conteúdo */
     transform: translate(-50%, -50%);
 
     width: 820px;
@@ -47,7 +42,6 @@
     grid-template-columns: 1fr 1fr;
 
     padding: 58px 78px 48px;
-
     column-gap: 58px;
 }
 
@@ -56,260 +50,642 @@
 ===================================== */
 
 .left-page,
-.right-page{
-    display:flex;
-    width:100%;
-    height:100%;
+.right-page {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
 }
 
-.page-content{
-    width:100%;
-    height:100%;
-
-    display:flex;
-    flex-direction:column;
+.page-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
 }
 
 /* =====================================
    LEFT HEADER
 ===================================== */
 
-.book-header{
-    display:flex;
-    align-items:center;
-
-    gap:22px;
-
-    margin-top:18px;
-    margin-bottom:15px;
+.book-header {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    margin-top: 18px;
+    margin-bottom: 15px;
 }
 
-.book-cover{
-    width:120px;
+.book-cover {
+    width: 95px;
+    flex-shrink: 0;
+    border-radius: 8px;
 
-    flex-shrink:0;
+    box-shadow:
+        0 10px 18px rgba(68, 43, 32, 0.16),
+        3px 4px 0 rgba(255, 255, 255, 0.65);
 
-    border-radius:8px;
-
-    box-shadow:0 12px 24px rgba(0,0,0,.18);
+    transform: rotate(-1deg);
 }
 
-.book-info{
-    flex:1;
+.book-info {
+    flex: 1;
+    min-width: 0;
 }
 
 /* =====================================
    TITLE
 ===================================== */
 
-.book-title{
-    font-size:1.25rem;
+.book-title {
+    margin: 0 0 14px;
 
-    font-weight:100;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.15;
 
-    line-height:1.15;
-
-    color:#392b22;
-
-    margin-bottom:14px;
+    color: #392b22;
 }
 
-.book-author{
-    font-size:1.05rem;
+.book-author {
+    margin: 0 0 18px;
 
-    color:#6e5a4d;
+    font-family: Arial, sans-serif;
+    font-size: 1rem;
 
-    margin-bottom:18px;
+    color: #6e5a4d;
 }
 
-.book-rating{
-    font-size:1rem;
+.book-rating {
+    margin: 0;
 
-    color:#d8a316;
+    font-family: Arial, sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+
+    color: #9a6b2f;
 }
 
 /* =====================================
    DIVIDER
 ===================================== */
 
-.book-divider{
-    width:100%;
+.book-divider {
+    width: 100%;
+    height: 1px;
 
-    height:1px;
+    background: #d8c7b6;
 
-    background:#d8c7b6;
+    margin-top: 0px;
+    margin-bottom: 10px;
 
-    margin:18px 0 22px;
+    opacity: 0.9;
 }
 
 /* =====================================
    METADATA
 ===================================== */
 
-.book-metadata{
-    display:flex;
-    flex-direction:column;
-
-    gap:18px;
+.book-metadata {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
 }
 
-.metadata-row{
-    display:grid;
+.metadata-row {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    column-gap: 10px;
 
-    grid-template-columns:120px 1fr;
+    align-items: start;
 
-    column-gap:18px;
-
-    align-items:start;
+    padding-bottom: 2px;
+    border-bottom: 1px dashed rgba(216, 199, 182, 0.55);
 }
 
-.metadata-label{
-    font-size:.82rem;
-
-    text-transform:uppercase;
-
-    letter-spacing:2px;
-
-    color:#9b8779;
-
-    font-weight:600;
+.metadata-row:last-child {
+    border-bottom: none;
 }
 
-.metadata-value{
-    font-size:1rem;
+.metadata-label {
+    font-family: Arial, sans-serif;
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
 
-    color:#43352c;
+    color: #9b8779;
+}
 
-    line-height:1.5;
+.metadata-value {
+    font-family: Arial, sans-serif;
+    font-size: 0.7rem;
+    line-height: 1.5;
+
+    color: #43352c;
+    overflow-wrap: anywhere;
 }
 
 /* =====================================
    RIGHT PAGE
 ===================================== */
 
-.right-content{
-    width:100%;
-    height:100%;
+.right-content {
+    position: relative;
 
-    display:flex;
-    flex-direction:column;
-}
+    width: 100%;
+    height: 100%;
 
-/* ===================================== */
+    display: flex;
+    flex-direction: column;
 
-.summary-title{
-    text-align:center;
-
-    font-family: "Corinthia";
-
-    font-size:1.25rem;
-
-    font-weight:600;
-
-    color:#722F37;
-
-    margin-top:10px;
-
-    margin-bottom:10px;
-}
-
-.summary-box{
-    flex:1;
-
-    overflow:hidden;
-
-}
-
-.summary-text{
-    margin:0;
-
-    font-size:.87rem;
-
-    line-height:1.8;
-
-    color:#5b4a3d;
-
-    text-align:justify;
-
-    white-space:pre-wrap;
-
-    overflow-wrap:anywhere;
-
-    margin-bottom:5px;
-
-}
-
-
-/* ===================================== */
-
-.section-title{
-    text-align:center;
-
-    font-size:1rem;
-
-    color:#722F37;
-
-    margin-bottom:14px;
-}
-
-.categories{
-    display:flex;
-
-    justify-content:center;
-
-    flex-wrap:wrap;
-
-    gap:10px;
-
-    margin-bottom:15px;
-
-}
-
-.category{
-    padding:7px 16px;
-
-    border-radius:999px;
-
-    background:#efe3d2;
-
-    border:1px solid #e4d2bc;
-
-    color:#722F37;
-
-    font-size:.77rem;
-}
-
-.preview-link{
-    align-self:center;
-
-    margin-top:auto;
-
-    text-decoration: underline;
-
-    text-underline-offset: 3px;
-
-    color:#8b5a4b;
-
-    font-weight:550;
-
-    transition:.25s;
-}
-
-.preview-link:hover{
-    color:#6d4438;
-
-    transform:translateY(-2px);
+    min-width: 0;
 }
 
 /* =====================================
-   BOOK DNA
+   SCRAPBOOK DECORATION
 ===================================== */
 
-.book-dna {
+.book-doodle {
     position: absolute;
 
-    left: 50%;
-    top: calc(50% + 300px);
+    pointer-events: none;
+    user-select: none;
 
-    transform: translateX(-50%);
+    color: #8e514e;
+    opacity: 0.9;
+}
+
+.book-doodle-star {
+    top: 10px;
+    right: 2px;
+
+    font-size: 0.9rem;
+
+    transform: rotate(8deg);
+}
+
+.book-doodle-heart {
+    top: 22px;
+    left: -6px;
+
+    font-size: 1rem;
+
+    transform: rotate(-8deg);
+}
+
+/* =====================================
+   PAPER LABEL
+===================================== */
+
+.book-paper-label {
+    align-self: center;
+
+    display: inline-block;
+
+    margin-top: 15px;
+    margin-bottom: 5px;
+
+    padding: 6px 13px;
+
+    background: rgba(239, 226, 210, 0.78);
+    border: 1px solid rgba(211, 192, 171, 0.72);
+
+    font-family: Arial, sans-serif;
+    font-size: 0.54rem;
+    font-weight: 700;
+
+    letter-spacing: 2px;
+
+    color: #8e5c52;
+
+    box-shadow:
+        0 2px 5px rgba(74, 45, 35, 0.05);
+
+    transform: rotate(1deg);
+}
+
+/* =====================================
+   AI SUMMARY HEADING
+===================================== */
+
+.summary-heading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    margin-top: 2px;
+    margin-bottom: 6px;
+}
+
+.summary-heading-icon {
+    font-size: 0.68rem;
+    color: #9b6e61;
+}
+
+.summary-title {
+    margin: 0;
+
+    text-align: center;
+
+    font-family: "Corinthia", cursive;
+    font-size: 1.25rem;
+    font-weight: 600;
+
+    line-height: 1;
+
+    color: #722f37;
+}
+
+/* =====================================
+   SUMMARY DECORATION
+===================================== */
+
+.summary-decoration {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    margin: 2px 0 12px;
+}
+
+.summary-decoration span {
+    display: block;
+
+    width: 8px;
+    height: 8px;
+
+    color: #8e514e;
+
+    font-size: 0.65rem;
+}
+
+.summary-decoration span:nth-child(1),
+.summary-decoration span:nth-child(3) {
+    width: 28px;
+    height: 1px;
+
+    background: #ddc9b6;
+}
+
+/* =====================================
+   SUMMARY BOX
+===================================== */
+
+.summary-box {
+    position: relative;
+
+    flex: 1;
+
+    min-height: 0;
+
+    overflow: hidden;
+
+    display: flex;
+}
+
+/* =====================================
+   SUMMARY NOTE
+===================================== */
+
+.summary-note {
+    position: relative;
+
+    width: 100%;
+
+    padding: 19px 18px 16px;
+
+    background:
+        linear-gradient(
+            rgba(255, 250, 243, 0.88),
+            rgba(250, 242, 231, 0.88)
+        );
+
+    border: 1px solid #dfcdb8;
+
+    box-shadow:
+        0 4px 8px rgba(76, 50, 37, 0.06);
+
+    transform: rotate(0.15deg);
+}
+
+/* =====================================
+   TAPE
+===================================== */
+
+.note-tape {
+    position: absolute;
+
+    width: 70px;
+    height: 17px;
+
+    top: -9px;
+    left: 50%;
+
+    transform: translateX(-50%) rotate(-1deg);
+
+    background: rgba(193, 153, 145, 0.28);
+
+    pointer-events: none;
+}
+
+/* =====================================
+   SUMMARY TEXT
+===================================== */
+
+.summary-text {
+    margin: 0;
+
+    font-family: Georgia, "Times New Roman", serif;
+
+    font-size: 0.87rem;
+    line-height: 1.8;
+
+    color: #5b4a3d;
+
+    text-align: justify;
+
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+/* Drop cap only when text is long */
+
+.summary-text.dropcap::first-letter {
+    float: left;
+
+    margin-right: 5px;
+    margin-top: 2px;
+
+    font-family: "Cormorant Garamond", Georgia, serif;
+
+    font-size: 2.4rem;
+    font-weight: 700;
+    line-height: 0.8;
+
+    color: #722f37;
+}
+
+/* =====================================
+   NOTE DECORATION
+===================================== */
+
+.note-mark {
+    position: absolute;
+
+    right: 12px;
+    bottom: 7px;
+
+    font-size: 0.8rem;
+
+    color: #9b6e61;
+
+    opacity: 0.8;
+}
+
+/* =====================================
+   BOOKSHELF SECTION
+===================================== */
+
+.book-categories-section {
+    margin-top: 14px;
+    flex-shrink: 0;
+}
+
+.book-mini-divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+
+    margin-bottom: 7px;
+}
+
+.book-mini-divider div {
+    width: 35px;
+    height: 1px;
+
+    background: #ddc9b6;
+}
+
+.book-mini-divider span {
+    font-size: 0.58rem;
+    color: #a26f61;
+}
+
+/* =====================================
+   SECTION TITLE
+===================================== */
+
+.section-title {
+    margin: 0 0 7px;
+
+    text-align: center;
+
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1rem;
+    font-weight: 600;
+
+    color: #722f37;
+}
+
+/* =====================================
+   CATEGORIES
+===================================== */
+
+.categories {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 7px;
+
+    margin-bottom: 8px;
+}
+
+.category {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 5px 11px;
+
+    border-radius: 999px;
+
+    background: #efe3d2;
+    border: 1px solid #e4d2bc;
+
+    font-family: Arial, sans-serif;
+    font-size: 0.68rem;
+    font-weight: 500;
+
+    color: #722f37;
+}
+
+/* =====================================
+   PREVIEW LINK
+===================================== */
+
+.preview-link {
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+
+    gap: 7px;
+
+    margin-top: auto;
+
+    padding-top: 4px;
+
+    text-decoration: underline;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 0.84rem;
+    font-weight: 600;
+
+    color: #8b5a4b;
+
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.preview-link:hover {
+    color: #6d4438;
+    transform: translateY(-2px);
+}
+
+/* =====================================
+   HANDWRITTEN NOTE
+===================================== */
+
+.book-handwritten-note {
+    align-self: flex-end;
+
+    margin-top: 10px;
+    margin-right: 6px;
+
+    font-family: "Comic Sans MS", "Segoe Print", cursive;
+    font-size: 0.68rem;
+
+    color: #9b6e61;
+
+    transform: rotate(-2deg);
+}
+
+
+/* =====================================
+   RESPONSIVE
+===================================== */
+
+@media (max-width: 1200px) {
+    .book-image {
+        width: 820px;
+    }
+
+    .book-overlay {
+        width: 750px;
+    }
+}
+
+@media (max-width: 900px) {
+    .book-container {
+        transform: translateY(-20px);
+    }
+
+    .book-image {
+        width: 720px;
+    }
+
+    .book-overlay {
+        width: 660px;
+        padding: 50px 62px 40px;
+        column-gap: 45px;
+    }
+
+    .book-cover {
+        width: 80px;
+    }
+
+    .book-title {
+        font-size: 1.1rem;
+    }
+
+    .book-author {
+        font-size: 0.95rem;
+    }
+
+    .metadata-row {
+        grid-template-columns: 95px 1fr;
+    }
+
+    .metadata-label {
+        font-size: 0.72rem;
+    }
+
+    .metadata-value {
+        font-size: 0.9rem;
+    }
+
+    .summary-text {
+        font-size: 0.78rem;
+    }
+}
+
+@media (max-width: 720px) {
+    .book-container {
+        height: auto;
+        transform: none;
+    }
+
+    .book-image {
+        display: none;
+    }
+
+    .book-overlay {
+        position: relative;
+
+        left: auto;
+        top: auto;
+
+        transform: none;
+
+        width: 100%;
+        aspect-ratio: auto;
+
+        grid-template-columns: 1fr;
+
+        padding: 30px 24px;
+
+        row-gap: 35px;
+    }
+
+    .left-page,
+    .right-page {
+        height: auto;
+    }
+
+    .book-header {
+        margin-top: 0;
+    }
+
+    .summary-box {
+        flex: none;
+    }
+
+    .book-dna {
+        position: relative;
+
+        left: auto;
+        top: auto;
+
+        transform: none;
+    }
 }
