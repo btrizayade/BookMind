@@ -77,7 +77,7 @@ function Sidebar({
           <div className="divider"></div>
 
           <span className="quote">
-            “A reader lives a thousand lives before he dies.”
+            “Books are a uniquely portable magic.”
           </span>
         </>
       )}

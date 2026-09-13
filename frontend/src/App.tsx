@@ -23,6 +23,11 @@ function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] =
     useState(false);
 
+  // Força uma nova instância do Recommendations
+  // sempre que o usuário abrir essa tela novamente.
+  const [recommendationsKey, setRecommendationsKey] =
+    useState(0);
+
   const hasContent = mainContent !== null;
 
   async function handleSearch(event?: React.FormEvent) {
@@ -38,12 +43,13 @@ function App() {
 
     try {
       const data = await searchBook(title);
+
       setBook(data);
     } catch (err) {
       console.error(err);
 
       setError(
-        "Não foi possível encontrar este livro. Verifique o título e tente novamente."
+        "It was not possible to find this book. Please try again."
       );
 
       setBook(null);
@@ -53,12 +59,13 @@ function App() {
   }
 
   function handleOpenSearch() {
-    const wasInitialState = !hasContent;
-
     setMainContent("search");
+
+    setBook(null);
+    setLoading(false);
     setError("");
 
-    if (wasInitialState) {
+    if (!hasContent) {
       setIsSidebarCollapsed(true);
     }
   }
@@ -66,9 +73,14 @@ function App() {
   function handleRecommendations() {
     const wasInitialState = !hasContent;
 
+    // Cria uma nova instância do componente.
+    setRecommendationsKey((current) => current + 1);
+
     setMainContent("recommendations");
-    setError("");
+
     setBook(null);
+    setLoading(false);
+    setError("");
 
     if (wasInitialState) {
       setIsSidebarCollapsed(true);
@@ -83,6 +95,7 @@ function App() {
     setMainContent("search");
     setLoading(true);
     setError("");
+    setBook(null);
 
     try {
       const data = await searchBook(recommendedBook.title);
@@ -93,7 +106,7 @@ function App() {
       console.error(err);
 
       setError(
-        "Não foi possível abrir este livro. Tente pesquisá-lo novamente."
+        "It was not possible to find this book. Please try again."
       );
 
       setBook(null);
@@ -135,24 +148,29 @@ function App() {
           <main className="book-area">
             {mainContent === "recommendations" ? (
               <Recommendations
+                key={recommendationsKey}
                 onSelectBook={handleSelectRecommendedBook}
               />
             ) : loading ? (
               <div className="loading-card">
-                <span className="loading-icon">📖</span>
+                <span className="loading-icon">
+                  𓇼 ⋆.˚ ⋆.˚ 𓇼
+                </span>
 
-                <h3>Buscando...</h3>
+                <h3>Searching...</h3>
 
                 <p>
-                  Estamos procurando o seu próximo livro!
+                  We are searching for your next great read!
                 </p>
               </div>
             ) : error ? (
               <div className="error-card">
-                <div className="error-icon">📚</div>
+                <div className="error-icon">
+                  📚
+                </div>
 
                 <div>
-                  <h3>Livro não encontrado</h3>
+                  <h3>Book not found</h3>
                   <p>{error}</p>
                 </div>
               </div>
@@ -163,11 +181,31 @@ function App() {
                 className="search-content"
                 onSubmit={handleSearch}
               >
+                {/* Scrapbook decoration */}
+                <span
+                  className="search-tape"
+                  aria-hidden="true"
+                />
+
+                <span
+                  className="search-paper-label"
+                  aria-hidden="true"
+                />
+
                 <h1>Search a Book</h1>
 
+                <div
+                  className="search-decoration"
+                  aria-hidden="true"
+                >
+                  <div />
+                  <span>♡</span>
+                  <div />
+                </div>
+
                 <p>
-                  Search for a book and explore its
-                  information and AI analysis.
+                  Search for a book and explore its information,
+                  reading profile and AI analysis.
                 </p>
 
                 <input
@@ -180,8 +218,15 @@ function App() {
                 />
 
                 <button type="submit">
-                  Search
+                  Search for Book
                 </button>
+
+                <span
+                  className="search-note"
+                  aria-hidden="true"
+                >
+                  a little literary treasure awaits for you
+                </span>
               </form>
             )}
           </main>

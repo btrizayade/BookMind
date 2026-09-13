@@ -180,11 +180,11 @@ function Recommendations({
 
       <div className="recommendations-header">
         <span className="scrapbook-label">
-          A LITTLE BOOKISH JOURNEY
+          YOUR LITTLE BOOKISH JOURNEY
         </span>
 
         <p className="recommendations-eyebrow">
-          FIND YOUR NEXT BOOK
+          FIND YOUR NEXT BOOK HERE
         </p>
 
         <h1>What are you in the mood for?</h1>

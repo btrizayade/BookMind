@@ -1,6 +1,5 @@
 import "./BookDNA.css";
 
-import dnaIcon from "../../assets/dna.png";
 import romanceIcon from "../../assets/romance.png";
 import fantasyIcon from "../../assets/fantasy.png";
 import thrillerIcon from "../../assets/thriller.png";
@@ -67,11 +66,6 @@ function BookDNA({ dna }: Props) {
     <section className="book-dna">
 
       <div className="book-dna-title">
-        <img
-          src={dnaIcon}
-          alt=""
-          className="dna-title-icon"
-        />
 
         <h3>BOOK DNA</h3>
       </div>

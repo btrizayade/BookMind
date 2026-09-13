@@ -5,66 +5,121 @@ interface Props {
 }
 
 function RightPage({ book }: Props) {
-
   const summary =
     book.ai_summary ??
-    (book.description
-      ? book.description.slice(0, 500) + "..."
-      : "No description available for this book.");
+    book.description ??
+    "No description available for this book.";
 
   const longText = summary.length > 250;
 
   return (
-
     <div className="page-content right-content">
+      {/* Decorative scrapbook elements */}
 
-      <h2 className="summary-title">
-        AI Summary
-      </h2>
+      <span
+        className="book-doodle book-doodle-star"
+        aria-hidden="true"
+      >
+        ✦
+      </span>
 
-      <div className="summary-box">
+      <span
+        className="book-doodle book-doodle-heart"
+        aria-hidden="true"
+      >
+        ♡
+      </span>
 
-        <p
-          className={
-            longText
-              ? "summary-text dropcap"
-              : "summary-text"
-          }
+      {/* Section label */}
+
+      <span className="book-paper-label">
+        AI BOOK NOTE
+      </span>
+
+      <div className="summary-heading">
+        <span
+          className="summary-heading-icon"
+          aria-hidden="true"
         >
-          {summary}
-        </p>
+          ✧
+        </span>
 
+        <h2 className="summary-title">
+          AI Summary
+        </h2>
+
+        <span
+          className="summary-heading-icon"
+          aria-hidden="true"
+        >
+          ✧
+        </span>
       </div>
 
-      {book.categories && book.categories.length > 0 && (
+      <div className="summary-decoration" aria-hidden="true">
+        <span />
+        <span>♡</span>
+        <span />
+      </div>
 
-        <>
-        
+      {/* AI Summary */}
+
+      <div className="summary-box">
+        <div className="summary-note">
+          <span
+            className="note-tape"
+            aria-hidden="true"
+          />
+
+          <p
+            className={
+              longText
+                ? "summary-text dropcap"
+                : "summary-text"
+            }
+          >
+            {summary}
+          </p>
+
+          <span
+            className="note-mark"
+            aria-hidden="true"
+          >
+            ✦
+          </span>
+        </div>
+      </div>
+
+      {/* Categories */}
+
+      {book.categories && book.categories.length > 0 && (
+        <div className="book-categories-section">
+          <div className="book-mini-divider" aria-hidden="true">
+            <span>✿</span>
+            <div />
+            <span>✿</span>
+          </div>
+
           <h3 className="section-title">
-            Categories
+            Bookshelf
           </h3>
 
           <div className="categories">
-
             {book.categories.map((category) => (
-
               <span
                 key={category}
                 className="category"
               >
                 {category}
               </span>
-
             ))}
-
           </div>
-
-        </>
-
+        </div>
       )}
 
-      {book.preview_link && (
+      {/* Preview */}
 
+      {book.preview_link && (
         <a
           href={book.preview_link}
           target="_blank"
@@ -72,12 +127,17 @@ function RightPage({ book }: Props) {
           className="preview-link"
         >
           Read Preview
+          <span aria-hidden="true"></span>
         </a>
-
       )}
 
+      <span
+        className="book-handwritten-note"
+        aria-hidden="true"
+      >
+        found between the pages...
+      </span>
     </div>
-
   );
 }
 
