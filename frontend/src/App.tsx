@@ -155,7 +155,7 @@ function App() {
               </div>
             ) : error ? (
               <div className="error-card">
-                <div className="error-icon">📚</div>
+                <div className="error-icon">☕︎</div>
 
                 <div>
                   <h3>Book not found</h3>
