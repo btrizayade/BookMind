@@ -130,8 +130,8 @@
 
     background: linear-gradient(
         135deg,
-        #722F37,
-        #7d4336
+        #8b5a4b,
+        #c88f82
     );
 
     color: white;
@@ -162,8 +162,8 @@
 
     top: 50%;
 
-    width: 20px;
-    height: 45px;
+    width: 34px;
+    height: 34px;
 
     transform: translateY(-50%);
 
@@ -173,46 +173,52 @@
 
     padding: 0;
 
-    border: 1px solid #dbc9b7;
-    border-radius: 0 14px 14px 0;
+    border: 1px solid rgba(114, 47, 55, 0.18);
+    border-radius: 50%;
 
-    background: #fdf8f3;
+    background: rgba(253, 248, 243, 0.98);
 
     color: #722f37;
 
-    font-size: 20px;
-    font-weight: 400;
+    font-size: 18px;
+    font-weight: 500;
 
     line-height: 1;
 
     cursor: pointer;
 
-    box-shadow: 5px 8px 18px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 5px 14px rgba(82, 50, 39, 0.12);
 
     z-index: 20;
 
     transition:
         background 0.2s ease,
         color 0.2s ease,
-        transform 0.2s ease;
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 /* botão enquanto sidebar está aberta */
 
 .sidebar-toggle-open {
-    right: -16px;
+    right: -18px;
 }
 
 /* botão enquanto sidebar está recolhida */
 
 .sidebar-toggle-collapsed {
-    left: 0;
+    left: 50%;
+    margin-left: -17px;
 }
 
 .sidebar-toggle:hover {
     background: #efe3d2;
 
     color: #5f262d;
+
+    transform: translateY(-50%) scale(1.06);
+
+    box-shadow: 0 7px 18px rgba(82, 50, 39, 0.16);
 }
 
 /* =====================================
