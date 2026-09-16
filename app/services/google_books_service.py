@@ -1,6 +1,9 @@
 import os
 import re
+import time
 import unicodedata
+import threading
+from concurrent.futures import ThreadPoolExecutor
 
 import httpx
 from dotenv import load_dotenv
@@ -20,9 +23,14 @@ load_dotenv()
 
 
 BASE_URL = "https://www.googleapis.com/books/v1/volumes"
+OPENLIBRARY_SEARCH_URL = "https://openlibrary.org/search.json"
+OPENLIBRARY_COVERS_URL = "https://covers.openlibrary.org/b/id"
 API_KEY = os.getenv("GOOGLE_BOOKS_API_KEY")
 
 repository = BookRepository()
+
+# Cliente HTTP compartilhado para reutilizar conexões TCP/TLS entre requisições.
+_http_client = httpx.Client()
 
 
 # Termos que normalmente indicam livros derivados, cópias SEO ou
@@ -30,6 +38,7 @@ repository = BookRepository()
 # Eles continuam sendo candidatos, mas devem ficar atrás de
 # edições legítimas da obra pesquisada.
 AUTOCOMPLETE_DERIVED_TERMS = {
+    # English — likely complementary/SEO/derived material
     "advanced methods",
     "effective methods",
     "comprehensive beginner",
@@ -41,6 +50,69 @@ AUTOCOMPLETE_DERIVED_TERMS = {
     "blueprint",
     "methods and functions",
     "data structures for programming",
+    "study guide",
+    "reading guide",
+    "teacher guide",
+    "teachers guide",
+    "conversation starters",
+    "workbook",
+    "companion",
+    "analysis",
+    "summary",
+    "philosophy",
+    "analysis book",
+
+    # Portuguese — likely complementary/derived material
+    "análise",
+    "resumo",
+    "filosofia",
+    "guia de estudo",
+    "guia de leitura",
+    "guia do professor",
+    "trilogia",
+    "saga",
+    "coleção",
+    "manual",
+}
+
+
+
+# Cache curto para autocomplete.
+# A ideia é evitar repetir chamadas ao Google Books durante a mesma sessão
+# e aproveitar consultas que o usuário acabou de fazer.
+AUTOCOMPLETE_CACHE_TTL = 300
+_autocomplete_cache: dict[str, tuple[float, list[dict]]] = {}
+
+# Termos/expressões que normalmente identificam materiais complementares
+# e coleções, em vez da obra procurada. Mantemos termos genéricos como
+# "guide" e "philosophy" fora desta lista para não eliminar livros legítimos.
+AUTOCOMPLETE_HARD_EXCLUDE_TERMS = {
+    "trilogy",
+    "collection",
+    "box set",
+    "complete series",
+    "complete collection",
+    "omnibus",
+    "bundle",
+    "book set",
+    "study guide",
+    "reading guide",
+    "teacher guide",
+    "teachers guide",
+    "conversation starters",
+    "workbook",
+    "companions",
+    "companion",
+    "trilogia",
+    "coleção",
+    "box",
+    "kit",
+    "guia de estudo",
+    "guia de leitura",
+    "guia do professor",
+    "resumo completo",
+    "análise completa",
+    "analise completa",
 }
 
 
@@ -198,7 +270,7 @@ def _google_books_request(
     """
 
     try:
-        response = httpx.get(
+        response = _http_client.get(
             BASE_URL,
             params={
                 "q": query,
@@ -306,53 +378,359 @@ def _search_google_books(
 
 
 # ============================================================
-# SUGESTÕES DE AUTOCOMPLETE
+# AUTOCOMPLETE
 # ============================================================
 
-def _build_book_suggestion(
-    volume: dict,
-) -> dict | None:
+# Cache curto em memória. O autocomplete trabalha com prefixos e,
+# por isso, consultas recentes são muito reaproveitáveis.
+AUTOCOMPLETE_CACHE_TTL = 300
+AUTOCOMPLETE_SOURCE_LIMIT = 6
+AUTOCOMPLETE_MAX_RESULTS = 4
+AUTOCOMPLETE_TIMEOUT = 2.8
+
+_autocomplete_cache: dict[str, tuple[float, object]] = {}
+_autocomplete_cache_lock = threading.Lock()
+
+OPENLIBRARY_HEADERS = {
+    "User-Agent": "BookMind/1.0 (book discovery application)",
+}
+
+
+def _autocomplete_cache_get(
+    key: str,
+) -> object | None:
+    """Retorna um valor válido do cache, removendo entradas expiradas."""
+
+    now = time.monotonic()
+
+    with _autocomplete_cache_lock:
+        cached = _autocomplete_cache.get(key)
+
+        if not cached:
+            return None
+
+        cached_at, value = cached
+
+        if now - cached_at >= AUTOCOMPLETE_CACHE_TTL:
+            _autocomplete_cache.pop(key, None)
+            return None
+
+        return value
+
+
+def _autocomplete_cache_set(
+    key: str,
+    value: object,
+) -> None:
+    """Salva um valor no cache do autocomplete."""
+
+    with _autocomplete_cache_lock:
+        _autocomplete_cache[key] = (
+            time.monotonic(),
+            value,
+        )
+
+
+def _openlibrary_autocomplete_request(
+    query: str,
+) -> list[dict]:
     """
-    Converte um volume do Google Books em uma sugestão leve.
+    Descobre candidatos no Open Library.
 
-    O autocomplete não gera análise com IA e mantém o volumeId
-    do Google Books para que a seleção futura possa abrir a
-    edição exata escolhida pelo usuário.
+    O Search API trabalha no nível de Work, mas também pode devolver
+    informações de Edition por meio do campo `editions`. Aproveitamos
+    isso para tentar obter capa/autor/edição sem uma segunda chamada.
     """
 
-    volume_id = volume.get("id")
-    volume_info = volume.get("volumeInfo", {})
+    normalized_query = normalize_text(query)
 
-    title = volume_info.get("title")
+    if not normalized_query:
+        return []
 
-    if not volume_id or not title:
+    cache_key = f"openlibrary:{normalized_query}"
+    cached = _autocomplete_cache_get(cache_key)
+
+    if cached is not None:
+        return cached  # type: ignore[return-value]
+
+    fields = (
+        "key,title,subtitle,author_name,first_publish_year,cover_i,"
+        "edition_count,editions.key,editions.title,editions.cover_i,"
+        "editions.author_name,editions.publish_date"
+    )
+
+    try:
+        response = httpx.get(
+            OPENLIBRARY_SEARCH_URL,
+            params={
+                "title": query,
+                "limit": AUTOCOMPLETE_SOURCE_LIMIT,
+                "fields": fields,
+            },
+            headers=OPENLIBRARY_HEADERS,
+            timeout=AUTOCOMPLETE_TIMEOUT,
+        )
+
+        # Algumas mudanças no schema de fields podem provocar 400.
+        # Nesse caso, mantemos o autocomplete funcional com Work metadata.
+        if response.status_code == 400:
+            response = httpx.get(
+                OPENLIBRARY_SEARCH_URL,
+                params={
+                    "title": query,
+                    "limit": AUTOCOMPLETE_SOURCE_LIMIT,
+                    "fields": (
+                        "key,title,subtitle,author_name,"
+                        "first_publish_year,cover_i,edition_count"
+                    ),
+                },
+                headers=OPENLIBRARY_HEADERS,
+                timeout=AUTOCOMPLETE_TIMEOUT,
+            )
+
+        response.raise_for_status()
+        data = response.json()
+        results = data.get("docs", [])
+
+        _autocomplete_cache_set(cache_key, results)
+        return results
+
+    except (httpx.HTTPError, ValueError) as exc:
+        print(
+            f"⚠️ Open Library autocomplete indisponível: {exc}"
+        )
+        return []
+
+
+def _google_books_autocomplete_request(
+    query: str,
+) -> list[dict]:
+    """
+    Descobre candidatos no Google Books.
+
+    O Google é usado aqui como fonte de descoberta e, principalmente,
+    de metadados bibliográficos confiáveis para o card do autocomplete.
+    """
+
+    normalized_query = normalize_text(query)
+
+    if not normalized_query:
+        return []
+
+    cache_key = f"google:{normalized_query}"
+    cached = _autocomplete_cache_get(cache_key)
+
+    if cached is not None:
+        return cached  # type: ignore[return-value]
+
+    if not API_KEY:
+        print(
+            "⚠️ Google Books autocomplete ignorado: API key ausente."
+        )
+        _autocomplete_cache_set(cache_key, [])
+        return []
+
+    try:
+        response = httpx.get(
+            BASE_URL,
+            params={
+                "q": f'intitle:"{query}"',
+                "maxResults": AUTOCOMPLETE_SOURCE_LIMIT,
+                "printType": "books",
+                "key": API_KEY,
+                "fields": (
+                    "items(id,volumeInfo(title,subtitle,authors,"
+                    "publishedDate,imageLinks,industryIdentifiers,"
+                    "pageCount,publisher,averageRating,ratingsCount))"
+                ),
+            },
+            timeout=AUTOCOMPLETE_TIMEOUT,
+        )
+
+        response.raise_for_status()
+        data = response.json()
+        results = data.get("items", [])
+
+        _autocomplete_cache_set(cache_key, results)
+        return results
+
+    except (httpx.HTTPError, ValueError) as exc:
+        print(
+            f"⚠️ Google Books autocomplete indisponível: {exc}"
+        )
+        return []
+
+
+def _normalize_authors(value: object) -> list[str]:
+    """Normaliza autores retornados por APIs diferentes."""
+
+    if not value:
+        return []
+
+    if isinstance(value, str):
+        return [value.strip()] if value.strip() else []
+
+    if isinstance(value, list):
+        return [
+            str(author).strip()
+            for author in value
+            if str(author).strip()
+        ]
+
+    return []
+
+
+def _first_list_item(value: object) -> object | None:
+    """Retorna o primeiro item de uma lista quando disponível."""
+
+    if isinstance(value, list) and value:
+        return value[0]
+
+    return None
+
+
+def _openlibrary_cover_url(
+    cover_id: int | str | None,
+) -> str | None:
+    """Monta a URL da capa a partir do cover_i do Open Library."""
+
+    if not cover_id:
         return None
 
-    authors = volume_info.get("authors", [])
+    return (
+        f"{OPENLIBRARY_COVERS_URL}/"
+        f"{cover_id}-M.jpg?default=false"
+    )
+
+
+def _build_openlibrary_suggestion(
+    doc: dict,
+) -> dict | None:
+    """
+    Converte um Work do Open Library em candidato de autocomplete.
+
+    Quando o Work não possui metadados suficientes, tenta usar a primeira
+    Edition retornada pelo próprio Search API para enriquecer o candidato.
+    """
+
+    title = doc.get("title")
+    work_key = doc.get("key")
+
+    if not title or not work_key:
+        return None
+
+    work_authors = _normalize_authors(
+        doc.get("author_name")
+    )
+    first_publish_year = doc.get("first_publish_year")
+    cover_id = doc.get("cover_i")
+    edition_count = doc.get("edition_count") or 0
+
+    editions = doc.get("editions") or {}
+    edition_docs = (
+        editions.get("docs", [])
+        if isinstance(editions, dict)
+        else []
+    )
+    first_edition = (
+        edition_docs[0]
+        if edition_docs and isinstance(edition_docs[0], dict)
+        else {}
+    )
+
+    edition_authors = _normalize_authors(
+        first_edition.get("author_name")
+    )
+    authors = work_authors or edition_authors
+
+    if not first_publish_year:
+        publish_date = first_edition.get("publish_date")
+
+        if publish_date:
+            match = re.search(r"\b(\d{4})\b", str(publish_date))
+            first_publish_year = (
+                match.group(1)
+                if match
+                else None
+            )
+
+    if not cover_id:
+        cover_id = first_edition.get("cover_i")
+
+    edition_key = first_edition.get("key")
+    edition_keys = doc.get("edition_key") or []
+
+    source_id = (
+        edition_key
+        or _first_list_item(edition_keys)
+        or str(work_key).replace("/works/", "")
+    )
+
+    return {
+        "title": title,
+        "subtitle": doc.get("subtitle"),
+        "authors": authors,
+        "author": authors[0] if authors else None,
+        "year": (
+            str(first_publish_year)
+            if first_publish_year
+            else None
+        ),
+        "thumbnail": _openlibrary_cover_url(cover_id),
+        "source": "openlibrary",
+        "source_id": str(source_id),
+        "edition_count": edition_count,
+    }
+
+
+def _build_google_suggestion(
+    item: dict,
+) -> dict | None:
+    """Converte um volume do Google Books em candidato de autocomplete."""
+
+    volume_info = item.get("volumeInfo") or {}
+    title = volume_info.get("title")
+
+    if not title:
+        return None
+
+    authors = _normalize_authors(
+        volume_info.get("authors")
+    )
+    image_links = volume_info.get("imageLinks") or {}
+
+    thumbnail = (
+        image_links.get("thumbnail")
+        or image_links.get("smallThumbnail")
+    )
+
+    if thumbnail and thumbnail.startswith("http://"):
+        thumbnail = "https://" + thumbnail[7:]
 
     return {
         "title": title,
         "subtitle": volume_info.get("subtitle"),
         "authors": authors,
         "author": authors[0] if authors else None,
-        "year": volume_info.get("publishedDate"),
-        "thumbnail": (
-            volume_info.get(
-                "imageLinks",
-                {},
-            ).get("thumbnail")
+        "year": (
+            str(volume_info["publishedDate"])
+            if volume_info.get("publishedDate")
+            else None
         ),
+        "thumbnail": thumbnail,
         "source": "google",
-        "source_id": volume_id,
+        "source_id": str(item.get("id") or ""),
+        "page_count": volume_info.get("pageCount"),
+        "publisher": volume_info.get("publisher"),
+        "average_rating": volume_info.get("averageRating"),
+        "ratings_count": volume_info.get("ratingsCount"),
     }
 
 
 def _build_database_suggestion(
     book: Book,
 ) -> dict:
-    """
-    Converte um livro salvo localmente em uma sugestão.
-    """
+    """Converte um livro salvo no banco em uma sugestão de autocomplete."""
 
     authors = (
         book.authors.split(", ")
@@ -365,7 +743,7 @@ def _build_database_suggestion(
         "subtitle": None,
         "authors": authors,
         "author": authors[0] if authors else None,
-        "year": book.published_year,
+        "year": str(book.published_year) if book.published_year else None,
         "thumbnail": book.thumbnail,
         "source": "database",
         "source_id": str(book.id),
@@ -377,37 +755,126 @@ def _autocomplete_quality_penalty(
     subtitle: str | None = None,
 ) -> float:
     """
-    Penaliza sinais de resultados derivados ou excessivamente
-    genéricos no autocomplete. Não elimina o resultado; apenas
-    evita que ele ocupe uma das primeiras posições quando há
-    edições mais relevantes.
+    Penaliza materiais derivados sem penalizar subtítulos legítimos.
+
+    Termos genéricos como "guide" ou "analysis" podem fazer parte do
+    subtítulo oficial de uma obra legítima. Por isso, a penalização forte
+    é aplicada principalmente ao título; no subtítulo usamos apenas
+    expressões compostas claramente derivadas.
     """
 
-    text = " ".join(
-        part
-        for part in (title, subtitle)
-        if part
-    )
-    normalized = normalize_text(text)
-
+    normalized_title = normalize_text(title)
+    normalized_subtitle = normalize_text(subtitle)
     penalty = 0.0
 
+    # No próprio título, estes termos são fortes indicadores de material
+    # derivado/complementar para fins de autocomplete.
     for term in AUTOCOMPLETE_DERIVED_TERMS:
-        if normalize_text(term) in normalized:
+        normalized_term = normalize_text(term)
+
+        if (
+            normalized_term
+            and normalized_term in normalized_title
+        ):
+            penalty += 24.0
+
+    # No subtítulo, somente expressões compostas são consideradas.
+    subtitle_derived_terms = {
+        "study guide",
+        "reading guide",
+        "teacher guide",
+        "teachers guide",
+        "conversation starters",
+        "workbook",
+        "companion",
+        "book analysis",
+        "book summary",
+        "análise do livro",
+        "resumo do livro",
+        "guia de estudo",
+        "guia de leitura",
+        "guia do professor",
+    }
+
+    for term in subtitle_derived_terms:
+        normalized_term = normalize_text(term)
+
+        if (
+            normalized_term
+            and normalized_term in normalized_subtitle
+        ):
             penalty += 18.0
 
-    # Subtítulos muito longos e genéricos tendem a ser menos úteis
-    # para autocomplete do que subtítulos editoriais curtos, como
-    # "An Illustrated Guide..." ou "Second Edition".
     subtitle_tokens = tokenize(subtitle)
 
-    if len(subtitle_tokens) >= 11:
+    # Subtítulos gigantes podem indicar material SEO/cópia, mas a
+    # penalização é leve para não eliminar edições legítimas.
+    if len(subtitle_tokens) >= 16:
         penalty += min(
-            (len(subtitle_tokens) - 10) * 1.5,
-            10.0,
+            (len(subtitle_tokens) - 15) * 1.0,
+            6.0,
         )
 
-    return min(penalty, 40.0)
+    return min(penalty, 48.0)
+
+def _is_strong_autocomplete_match(
+    query: str,
+    title: str,
+    subtitle: str | None = None,
+) -> bool:
+    """Mantém somente títulos que correspondem ao prefixo digitado."""
+
+    normalized_query = normalize_text(query)
+    normalized_title = normalize_text(title)
+
+    if not normalized_query or not normalized_title:
+        return False
+
+    combined = " ".join(
+        value
+        for value in (
+            normalized_title,
+            normalize_text(subtitle),
+        )
+        if value
+    )
+
+    for term in AUTOCOMPLETE_HARD_EXCLUDE_TERMS:
+        normalized_term = normalize_text(term)
+
+        if not normalized_term:
+            continue
+
+        pattern = rf"\b{re.escape(normalized_term)}\b"
+
+        if re.search(pattern, combined):
+            return False
+
+    if normalized_title == normalized_query:
+        return True
+
+    if normalized_title.startswith(
+        normalized_query + " "
+    ):
+        return True
+
+    query_tokens = tokenize(normalized_query)
+    title_tokens = tokenize(normalized_title)
+
+    if (
+        not query_tokens
+        or not title_tokens
+        or len(query_tokens) > len(title_tokens)
+    ):
+        return False
+
+    return all(
+        title_token.startswith(query_token)
+        for query_token, title_token in zip(
+            query_tokens,
+            title_tokens,
+        )
+    )
 
 
 def _autocomplete_text_score(
@@ -415,20 +882,10 @@ def _autocomplete_text_score(
     title: str,
     subtitle: str | None = None,
 ) -> float:
-    """
-    Calcula um score específico para autocomplete.
-
-    O autocomplete deve: 
-    - privilegiar títulos que começam pela busca;
-    - favorecer edições que tragam subtítulo útil;
-    - evitar que títulos excessivamente longos e genéricos
-      ocupem as primeiras posições;
-    - permitir extensões legítimas como "Second Edition".
-    """
+    """Calcula a correspondência textual do candidato."""
 
     normalized_query = normalize_text(query)
     normalized_title = normalize_text(title)
-    normalized_subtitle = normalize_text(subtitle)
 
     if not normalized_query or not normalized_title:
         return 0.0
@@ -436,150 +893,96 @@ def _autocomplete_text_score(
     query_tokens = tokenize(normalized_query)
     title_tokens = tokenize(normalized_title)
 
-    if not query_tokens or not title_tokens:
-        return 0.0
-
-    # --------------------------------------------------------
-    # CORRESPONDÊNCIA PRINCIPAL
-    # --------------------------------------------------------
-
     if normalized_title == normalized_query:
-        score = 100.0
-    elif normalized_title.startswith(normalized_query):
-        score = 96.0
-    elif normalized_query in normalized_title:
-        score = 84.0
+        score = 130.0
+    elif normalized_title.startswith(
+        normalized_query + " "
+    ):
+        score = 116.0
+    elif normalized_title.startswith(
+        normalized_query
+    ):
+        score = 108.0
     else:
-        query_token_set = set(query_tokens)
-        title_token_set = set(title_tokens)
+        matched_tokens = 0
 
-        matched_tokens = len(
-            query_token_set.intersection(title_token_set)
-        )
-
-        for query_token in query_token_set - title_token_set:
-            if any(
-                token.startswith(query_token)
-                or query_token.startswith(token)
-                for token in title_token_set
-            ):
+        for query_token, title_token in zip(
+            query_tokens,
+            title_tokens,
+        ):
+            if title_token.startswith(query_token):
                 matched_tokens += 1
+            else:
+                break
 
-        token_ratio = matched_tokens / len(query_token_set)
-
-        if token_ratio <= 0:
+        if (
+            not query_tokens
+            or matched_tokens != len(query_tokens)
+        ):
             return 0.0
 
-        score = token_ratio * 65.0
+        score = 98.0
 
-    # --------------------------------------------------------
-    # PREFIXO POR PALAVRAS
-    # --------------------------------------------------------
+    extra_tokens = max(
+        0,
+        len(title_tokens) - len(query_tokens),
+    )
 
-    matched_prefix_tokens = 0
-
-    for query_token, title_token in zip(
-        query_tokens,
-        title_tokens,
-    ):
-        if (
-            query_token == title_token
-            or query_token.startswith(title_token)
-            or title_token.startswith(query_token)
-        ):
-            matched_prefix_tokens += 1
-        else:
-            break
-
-    if matched_prefix_tokens:
-        score += (
-            matched_prefix_tokens
-            / len(query_tokens)
-        ) * 8.0
-
-    # --------------------------------------------------------
-    # TÍTULOS MUITO LONGOS
-    # --------------------------------------------------------
-    #
-    # Pequenas extensões são perfeitamente normais:
-    #
-    #   Grokking Algorithms
-    #   Grokking Algorithms, Second Edition
-    #
-    # Já extensões enormes e genéricas tendem a ser materiais
-    # derivados, guias independentes ou livros que usam a obra
-    # original apenas como palavra-chave.
-    #
-    # Não rejeitamos esses resultados; apenas os empurramos
-    # para baixo no autocomplete.
-
-    if normalized_title.startswith(normalized_query):
-        extra_tokens = max(
-            0,
-            len(title_tokens) - len(query_tokens),
+    if extra_tokens:
+        score -= min(
+            extra_tokens * 2.5,
+            18.0,
         )
 
-        if extra_tokens > 1:
-            score -= min(
-                (extra_tokens - 1) * 2.5,
-                24.0,
-            )
-
-    # --------------------------------------------------------
-    # SUBTÍTULO ÚTIL
-    # --------------------------------------------------------
-    #
-    # O subtítulo ajuda o usuário a diferenciar edições.
-    # Ele recebe um pequeno bônus, suficiente para desempatar
-    # uma edição rica em metadados sem dominar o ranking.
-
-    if normalized_subtitle:
-        score += 5.0
-
-    # Se a consulta também aparece no subtítulo, há contexto
-    # adicional, mas esse bônus é propositalmente pequeno.
-    if normalized_subtitle and normalized_query in normalized_subtitle:
-        score += 2.0
+    if subtitle:
+        score += 1.5
 
     return round(
-        max(0.0, min(score, 100.0)),
+        max(0.0, min(score, 130.0)),
         2,
     )
 
-def _autocomplete_dedupe_key(
+
+def _autocomplete_author_key(
+    author: str | None,
+) -> str:
+    """Cria uma chave estável para pequenas variações no nome do autor."""
+
+    tokens = tokenize(author)
+
+    if not tokens:
+        return ""
+
+    # Mantém o primeiro e o último nome; isso faz, por exemplo,
+    # "Aditya Y Bhargava" e "Aditya Bhargava" representarem a mesma pessoa.
+    if len(tokens) >= 2:
+        return f"{tokens[0]} {tokens[-1]}"
+
+    return tokens[0]
+
+
+def _autocomplete_identity_key(
     suggestion: dict,
-) -> tuple[str, str, str]:
+) -> tuple[str, str]:
     """
-    Cria uma chave de deduplicação independente da fonte.
+    Identidade usada para merge entre fontes.
 
-    Para o mesmo título/autor, uma entrada do banco e uma entrada
-    do Google Books representam normalmente o mesmo livro. Nesses
-    casos, mantemos a versão com metadados mais completos.
+    Título + autor é usado quando ambos existem. Se uma fonte não trouxe
+    o autor, usamos apenas o título para permitir o enriquecimento posterior.
     """
 
-    title = normalize_text(
-        suggestion.get("title")
-    )
-
-    subtitle = normalize_text(
-        suggestion.get("subtitle")
-    )
-
-    author = normalize_text(
+    title = normalize_text(suggestion.get("title"))
+    author_key = _autocomplete_author_key(
         suggestion.get("author")
     )
 
-    return (
-        title,
-        subtitle,
-        author,
-    )
+    return title, author_key
 
 
 def _suggestion_completeness(
     suggestion: dict,
 ) -> int:
-    """Retorna um score simples de completude dos metadados."""
+    """Mede a completude dos metadados exibidos no autocomplete."""
 
     fields = (
         suggestion.get("subtitle"),
@@ -594,23 +997,165 @@ def _suggestion_completeness(
     )
 
 
+def _merge_suggestion_metadata(
+    current: dict,
+    incoming: dict,
+) -> dict:
+    """Combina metadados de dois candidatos da mesma identidade."""
+
+    merged = dict(current)
+
+    fields = (
+        "subtitle",
+        "year",
+        "thumbnail",
+        "author",
+        "authors",
+        "page_count",
+        "publisher",
+        "average_rating",
+        "ratings_count",
+        "edition_count",
+    )
+
+    for field in fields:
+        current_value = merged.get(field)
+        incoming_value = incoming.get(field)
+
+        if not current_value and incoming_value:
+            merged[field] = incoming_value
+
+    # Quando os autores representam a mesma pessoa, o Google costuma
+    # oferecer uma grafia bibliográfica mais consistente para exibição.
+    if (
+        merged.get("author")
+        and incoming.get("author")
+        and _autocomplete_author_key(merged.get("author"))
+        == _autocomplete_author_key(incoming.get("author"))
+        and incoming.get("source") == "google"
+    ):
+        merged["author"] = incoming["author"]
+        merged["authors"] = incoming.get("authors") or merged.get("authors")
+
+    # Se o candidato mais completo veio de outra fonte, usamos a capa dele.
+    if (
+        not merged.get("thumbnail")
+        and incoming.get("thumbnail")
+    ):
+        merged["thumbnail"] = incoming["thumbnail"]
+
+    return merged
+
+
+def _autocomplete_source_bonus(
+    suggestion: dict,
+) -> float:
+    """
+    Bônus pequeno pela confiabilidade da fonte.
+
+    O banco local é útil para velocidade, mas não deve superar uma fonte
+    externa somente por ser local, porque pode conter dados antigos ou
+    incorretos.
+    """
+
+    source = suggestion.get("source")
+
+    return {
+        "google": 6.0,
+        "openlibrary": 5.0,
+        "database": 1.0,
+    }.get(source, 0.0)
+
+def _autocomplete_candidate_score(
+    query: str,
+    suggestion: dict,
+) -> float:
+    """Score final de um candidato antes do merge."""
+
+    score = _autocomplete_text_score(
+        query,
+        suggestion["title"],
+        suggestion.get("subtitle"),
+    )
+
+    score -= _autocomplete_quality_penalty(
+        suggestion["title"],
+        suggestion.get("subtitle"),
+    )
+
+    score += _autocomplete_source_bonus(suggestion)
+    score += _suggestion_completeness(suggestion) * 2.0
+
+    try:
+        edition_count = int(
+            suggestion.get("edition_count") or 0
+        )
+    except (TypeError, ValueError):
+        edition_count = 0
+
+    # Popularidade no Open Library ajuda a desempatar, mas nunca domina
+    # a correspondência do título.
+    if edition_count > 1:
+        score += min(
+            edition_count / 25.0,
+            4.0,
+        )
+
+    return round(max(score, 0.0), 2)
+
+
+def _prepare_source_candidates(
+    query: str,
+    suggestions: list[dict],
+) -> list[tuple[float, dict]]:
+    """Filtra e pontua candidatos vindos de uma única fonte."""
+
+    candidates: list[tuple[float, dict]] = []
+
+    for suggestion in suggestions:
+        title = suggestion.get("title")
+
+        if not title:
+            continue
+
+        if not _is_strong_autocomplete_match(
+            query,
+            title,
+            suggestion.get("subtitle"),
+        ):
+            continue
+
+        score = _autocomplete_candidate_score(
+            query,
+            suggestion,
+        )
+
+        if score < 55.0:
+            continue
+
+        candidates.append((score, suggestion))
+
+    return candidates
+
+
 def suggest_books(
     query: str,
     db: Session,
-    limit: int = 4,
+    limit: int = AUTOCOMPLETE_MAX_RESULTS,
 ) -> list[dict]:
     """
-    Retorna até quatro sugestões para autocomplete.
+    Retorna sugestões rápidas para o autocomplete.
 
-    Ordem lógica:
+    Pipeline:
+        1. valida e verifica cache final;
+        2. busca no banco por prefixo;
+        3. consulta Open Library + Google Books em paralelo;
+        4. filtra correspondência textual forte;
+        5. faz merge por título + autor;
+        6. completa metadados de uma fonte com outra;
+        7. ranqueia e retorna até quatro candidatos.
 
-    1. livros locais;
-    2. Google Books;
-    3. deduplicação entre fontes;
-    4. ranking específico de autocomplete;
-    5. limite final de quatro sugestões.
-
-    O endpoint não chama Gemini e não salva novos livros.
+    Gemini nunca é chamado e nenhum novo livro é salvo.
     """
 
     query = query.strip()
@@ -623,8 +1168,53 @@ def suggest_books(
     if not normalized_query:
         return []
 
-    # A chave é independente da fonte para permitir deduplicação.
-    merged: dict[tuple[str, str, str], tuple[float, dict]] = {}
+    limit = max(
+        1,
+        min(limit, AUTOCOMPLETE_MAX_RESULTS),
+    )
+
+    final_cache_key = f"result:{normalized_query}"
+    cached_final = _autocomplete_cache_get(final_cache_key)
+
+    if cached_final is not None:
+        return cached_final[:limit]  # type: ignore[index]
+
+    merged: dict[tuple[str, str], tuple[float, dict]] = {}
+
+    def add_candidate(
+        score: float,
+        suggestion: dict,
+    ) -> None:
+        key = _autocomplete_identity_key(suggestion)
+        current = merged.get(key)
+
+        if current is None:
+            merged[key] = (score, suggestion)
+            return
+
+        current_score, current_suggestion = current
+        combined = _merge_suggestion_metadata(
+            current_suggestion,
+            suggestion,
+        )
+
+        combined_score = max(
+            current_score,
+            score,
+        )
+
+        # Metadados vindos do segundo provedor podem transformar um
+        # candidato inicialmente fraco em um resultado útil.
+        combined_score += max(
+            0,
+            _suggestion_completeness(combined)
+            - _suggestion_completeness(current_suggestion),
+        ) * 1.5
+
+        merged[key] = (
+            round(combined_score, 2),
+            combined,
+        )
 
     # ========================================================
     # 1. BANCO LOCAL
@@ -632,169 +1222,267 @@ def suggest_books(
 
     local_books = (
         db.query(Book)
+        .filter(Book.title.ilike(f"{query}%"))
+        .limit(12)
         .all()
     )
 
-    for book in local_books:
-        suggestion = _build_database_suggestion(book)
+    local_suggestions = [
+        _build_database_suggestion(book)
+        for book in local_books
+    ]
 
-        score = _autocomplete_text_score(
+    for score, suggestion in _prepare_source_candidates(
+        query,
+        local_suggestions,
+    ):
+        add_candidate(
+            score,
+            suggestion,
+        )
+
+    # ========================================================
+    # 2. FONTES EXTERNAS EM PARALELO
+    # ========================================================
+
+    print(
+        f"🔎 Autocomplete: consultando Open Library + Google Books "
+        f"para '{query}'..."
+    )
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        openlibrary_future = executor.submit(
+            _openlibrary_autocomplete_request,
             query,
-            suggestion["title"],
-            suggestion.get("subtitle"),
         )
-        score -= _autocomplete_quality_penalty(
-            suggestion["title"],
-            suggestion.get("subtitle"),
+        google_future = executor.submit(
+            _google_books_autocomplete_request,
+            query,
         )
 
-        if score < 35.0:
-            continue
+        try:
+            openlibrary_docs = openlibrary_future.result()
+        except Exception as exc:
+            print(
+                f"⚠️ Falha no Open Library autocomplete: {exc}"
+            )
+            openlibrary_docs = []
 
-        key = _autocomplete_dedupe_key(
-            suggestion
+        try:
+            google_items = google_future.result()
+        except Exception as exc:
+            print(
+                f"⚠️ Falha no Google Books autocomplete: {exc}"
+            )
+            google_items = []
+
+    # ========================================================
+    # 3. OPEN LIBRARY
+    # ========================================================
+
+    openlibrary_suggestions = [
+        suggestion
+        for doc in openlibrary_docs
+        if (
+            suggestion := _build_openlibrary_suggestion(doc)
+        )
+    ]
+
+    for score, suggestion in _prepare_source_candidates(
+        query,
+        openlibrary_suggestions,
+    ):
+        add_candidate(
+            score,
+            suggestion,
         )
 
-        current = merged.get(key)
+    # ========================================================
+    # 4. GOOGLE BOOKS
+    # ========================================================
 
-        # Quando o banco possui a mesma obra, Google Books poderá
-        # substituir a entrada por uma versão com subtítulo/capa.
+    google_suggestions = [
+        suggestion
+        for item in google_items
+        if (
+            suggestion := _build_google_suggestion(item)
+        )
+    ]
+
+    for score, suggestion in _prepare_source_candidates(
+        query,
+        google_suggestions,
+    ):
+        add_candidate(
+            score,
+            suggestion,
+        )
+
+    # ========================================================
+    # 5. RANKING FINAL
+    # ========================================================
+
+    ranked = list(merged.values())
+
+    def _final_sort_key(
+        item: tuple[float, dict],
+    ) -> tuple[int, float, int, int, str]:
+        score, suggestion = item
+        title = suggestion.get("title") or ""
+        exact_title = (
+            normalize_text(title) == normalized_query
+        )
+
+        # Um título exatamente igual ao que foi digitado sempre vem antes
+        # de uma variante como "Second Edition". Isso evita que uma edição
+        # relacionada, porém menos aderente, desloque o resultado exato.
+        # Dentro do mesmo grupo, score e completude continuam decidindo.
+        source = suggestion.get("source")
+        source_priority = {
+            "google": 3,
+            "openlibrary": 2,
+            "database": 1,
+        }.get(source, 0)
+
+        return (
+            1 if exact_title else 0,
+            score,
+            _suggestion_completeness(suggestion),
+            source_priority,
+            suggestion.get("year") or "",
+        )
+
+    ranked.sort(
+        key=_final_sort_key,
+        reverse=True,
+    )
+
+    # Uma mesma representação bibliográfica pode aparecer em mais de uma
+    # fonte com pequenas diferenças de autor. Para o autocomplete, títulos
+    # iguais ocupam apenas uma posição; variantes reais do título continuam
+    # separadas.
+    best_by_title: dict[str, tuple[float, dict]] = {}
+
+    for score, suggestion in ranked:
+        title_key = normalize_text(
+            suggestion.get("title")
+        )
+
+        current = best_by_title.get(title_key)
+
         if current is None:
-            merged[key] = (
-                score + 2.0,
+            best_by_title[title_key] = (
+                score,
                 suggestion,
             )
             continue
 
         current_score, current_suggestion = current
 
+        current_exact = (
+            title_key == normalized_query
+        )
+        incoming_exact = (
+            title_key == normalized_query
+        )
+
+        # Para títulos exatos, uma fonte externa deve prevalecer sobre o
+        # banco quando a autoria divergir, pois isso evita mostrar uma obra
+        # local potencialmente desatualizada como se fosse a correspondência
+        # bibliográfica principal.
+        current_source = current_suggestion.get("source")
+        incoming_source = suggestion.get("source")
+
+        current_external = current_source in {
+            "google",
+            "openlibrary",
+        }
+        incoming_external = incoming_source in {
+            "google",
+            "openlibrary",
+        }
+
+        author_conflict = (
+            bool(current_suggestion.get("author"))
+            and bool(suggestion.get("author"))
+            and _autocomplete_author_key(
+                current_suggestion.get("author")
+            )
+            != _autocomplete_author_key(
+                suggestion.get("author")
+            )
+        )
+
         if (
-            _suggestion_completeness(suggestion)
-            > _suggestion_completeness(current_suggestion)
+            current_exact
+            and incoming_exact
+            and author_conflict
+            and incoming_external
+            and not current_external
         ):
-            merged[key] = (
+            best_by_title[title_key] = (
                 score,
-                suggestion,
+                _merge_suggestion_metadata(
+                    suggestion,
+                    current_suggestion,
+                ),
             )
-        elif score > current_score:
-            merged[key] = (
+            continue
+
+        current_quality = (
+            current_score,
+            _suggestion_completeness(current_suggestion),
+            1 if current_external else 0,
+            1 if current_source == "google" else 0,
+        )
+        incoming_quality = (
+            score,
+            _suggestion_completeness(suggestion),
+            1 if incoming_external else 0,
+            1 if incoming_source == "google" else 0,
+        )
+
+        if incoming_quality > current_quality:
+            best_by_title[title_key] = (
                 score,
-                suggestion,
-            )
-
-    # ========================================================
-    # 2. GOOGLE BOOKS
-    # ========================================================
-
-    print(
-        f"🔎 Autocomplete: consultando Google Books para '{query}'..."
-    )
-
-    data = _google_books_request(query)
-
-    if data and data.get("items"):
-        for item in data["items"]:
-            volume_info = item.get(
-                "volumeInfo",
-                {},
-            )
-
-            result_title = volume_info.get("title")
-
-            if not result_title:
-                continue
-
-            suggestion = _build_book_suggestion(item)
-
-            if not suggestion:
-                continue
-
-            if _is_collection_or_non_book_match(
-                result_title,
-                query,
-            ):
-                continue
-
-            score = _autocomplete_text_score(
-                query,
-                result_title,
-                volume_info.get("subtitle"),
-            )
-            score -= _autocomplete_quality_penalty(
-                result_title,
-                volume_info.get("subtitle"),
-            )
-
-            # Ignora resultados sem relação suficiente.
-            if score < 35.0:
-                continue
-
-            key = _autocomplete_dedupe_key(
-                suggestion
-            )
-
-            current = merged.get(key)
-
-            if current is None:
-                merged[key] = (
-                    score,
+                _merge_suggestion_metadata(
                     suggestion,
-                )
-                continue
-
-            current_score, current_suggestion = current
-
-            # Google Books geralmente tem subtítulo/capa/ID da edição,
-            # então ganha quando possui metadados mais completos.
-            google_completeness = _suggestion_completeness(
-                suggestion
+                    current_suggestion,
+                ),
             )
-            current_completeness = _suggestion_completeness(
-                current_suggestion
+        else:
+            best_by_title[title_key] = (
+                current_score,
+                _merge_suggestion_metadata(
+                    current_suggestion,
+                    suggestion,
+                ),
             )
 
-            if google_completeness > current_completeness:
-                merged[key] = (
-                    score,
-                    suggestion,
-                )
-            elif score > current_score:
-                merged[key] = (
-                    score,
-                    suggestion,
-                )
-
-    # ========================================================
-    # 3. ORDENAÇÃO
-    # ========================================================
-
-    ranked = list(merged.values())
-
+    ranked = list(best_by_title.values())
     ranked.sort(
-        key=lambda item: (
-            item[0],
-            _suggestion_completeness(item[1]),
-            1 if item[1].get("source") == "google" else 0,
-            1 if item[1].get("subtitle") else 0,
-            item[1].get("year") or "",
-        ),
+        key=_final_sort_key,
         reverse=True,
     )
 
-    # ========================================================
-    # 4. LIMITE FINAL
-    # ========================================================
-
     result = [
         suggestion
-        for _, suggestion in ranked[:4]
+        for _, suggestion in ranked[:limit]
     ]
+
+    _autocomplete_cache_set(
+        final_cache_key,
+        result,
+    )
 
     print(
         f"✅ Autocomplete: {len(result)} sugestões retornadas."
     )
 
-    for index, suggestion in enumerate(result, start=1):
+    for index, suggestion in enumerate(
+        result,
+        start=1,
+    ):
         subtitle = suggestion.get("subtitle")
         label = suggestion["title"]
 
@@ -1819,6 +2507,7 @@ def _is_collection_or_non_book_match(
         return False
 
     unwanted_terms = {
+        # English
         "trilogy",
         "collection",
         "box",
@@ -1839,6 +2528,16 @@ def _is_collection_or_non_book_match(
         "reading guide",
         "teacher guide",
         "teachers guide",
+
+        # Portuguese
+        "trilogia",
+        "coleção",
+        "kit",
+        "guia",
+        "análise",
+        "resumo",
+        "manual",
+        "estudo",
     }
 
     for term in unwanted_terms:

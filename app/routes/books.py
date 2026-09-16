@@ -16,6 +16,10 @@ router = APIRouter()
 )
 def search(
     title: str,
+    author: str | None = Query(
+        default=None,
+        max_length=200,
+    ),
     db: Session = Depends(get_db),
 ):
     """
@@ -30,6 +34,7 @@ def search(
     return search_books(
         title,
         db,
+        author=author.strip() if author else None,
     )
 
 
