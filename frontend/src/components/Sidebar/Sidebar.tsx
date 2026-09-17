@@ -1,4 +1,7 @@
 import logo from "../../assets/logo.png";
+import miniLogo from "../../assets/minilogo.png";
+import searchIcon from "../../assets/search.png";
+import findIcon from "../../assets/find.png";
 import "./Sidebar.css";
 
 interface SidebarProps {
@@ -24,33 +27,73 @@ function Sidebar({
     >
       {isSidebarCollapsed ? (
         hasContent && (
-          <button
-            className="sidebar-toggle sidebar-toggle-collapsed"
-            onClick={onToggle}
-            aria-label="Expand sidebar"
-            type="button"
-          >
-            ›
-          </button>
-        )
-      ) : (
-        <>
-          {hasContent && (
+          <div className="sidebar-rail">
             <button
-              className="sidebar-toggle sidebar-toggle-open"
+              className="sidebar-rail-toggle"
               onClick={onToggle}
-              aria-label="Collapse sidebar"
+              aria-label="Expand sidebar"
+              title="Expand sidebar"
               type="button"
             >
               ‹
             </button>
-          )}
 
-          <img
-            src={logo}
-            alt="BookMind"
-            className="logo"
-          />
+            <img
+              src={miniLogo}
+              alt="BookMind"
+              className="sidebar-rail-logo"
+            />
+
+            <button
+              className="sidebar-rail-action"
+              onClick={onSearch}
+              aria-label="Search a Book"
+              title="Search a Book"
+              type="button"
+            >
+              <img
+                src={searchIcon}
+                alt=""
+                aria-hidden="true"
+              />
+            </button>
+
+            <button
+              className="sidebar-rail-action"
+              onClick={onRecommendations}
+              aria-label="Find My Next Book"
+              title="Find My Next Book"
+              type="button"
+            >
+              <img
+                src={findIcon}
+                alt=""
+                aria-hidden="true"
+              />
+            </button>
+          </div>
+        )
+      ) : (
+        <>
+          <div className="sidebar-top">
+            {hasContent && (
+              <button
+                className="sidebar-toggle sidebar-toggle-open"
+                onClick={onToggle}
+                aria-label="Collapse sidebar"
+                title="Collapse sidebar"
+                type="button"
+              >
+                ‹
+              </button>
+            )}
+
+            <img
+              src={logo}
+              alt="BookMind"
+              className="logo"
+            />
+          </div>
 
           <p className="subtitle">
             Discover your next favorite book with AI.
