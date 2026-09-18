@@ -1,7 +1,9 @@
 from logging.config import fileConfig
+
 import os
 
 from dotenv import load_dotenv
+
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
@@ -9,6 +11,7 @@ from alembic import context
 
 from app.database.database import Base
 from app.models.book import Book
+from app.models.user import User
 
 
 load_dotenv()
@@ -34,7 +37,6 @@ target_metadata = Base.metadata
 
 def run_migrations_offline() -> None:
     """Run migrations in offline mode."""
-
     context.configure(
         url=database_url,
         target_metadata=target_metadata,
@@ -48,7 +50,6 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations in online mode."""
-
     configuration = config.get_section(
         config.config_ini_section,
         {},
