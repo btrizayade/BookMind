@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
+from app.routes.auth import router as auth_router
 from app.routes.books import router as books_router
 from app.routes.recommendations import router as recommendations_router
 
@@ -31,6 +32,8 @@ def home():
         "message": "Bem-vindo ao BookMind! Descubra livros, explore histórias e encontre sua próxima grande leitura."
     }
 
+
+app.include_router(auth_router)
 
 app.include_router(books_router)
 
