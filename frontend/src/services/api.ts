@@ -82,3 +82,38 @@ export async function getRecommendations(
 
   return response.json();
 }
+
+export interface LoginResponse {
+  access_token: string;
+  token_type: string;
+}
+
+export async function loginUser(
+  email: string,
+  password: string,
+): Promise<LoginResponse> {
+  const response = await fetch(
+    `${API_URL}/auth/login`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        password,
+      }),
+    },
+  );
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(
+      data?.detail ??
+        "Invalid email or password.",
+    );
+  }
+
+  return data;
+}

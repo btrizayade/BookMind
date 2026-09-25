@@ -12,6 +12,8 @@
 
     padding: 22px 24px 45px;
 
+    transform: translateY(-55px);
+
     color: #4d3930;
 
     animation: scrapbook-entry 0.45s ease;
