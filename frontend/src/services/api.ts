@@ -66,7 +66,7 @@ export async function getRecommendations(
   preferences: RecommendationRequest,
 ): Promise<RecommendationResponse> {
   const response = await fetch(
-    `${API_URL}/recommendations`,
+    `${API_URL}/books/recommendations`,
     {
       method: "POST",
       headers: {
