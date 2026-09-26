@@ -213,9 +213,14 @@ body {
 
   transform: rotate(-0.35deg);
 
+  /* sobe um pouco na tela */
+  top: -40px;
+
   overflow: visible;
 
   text-align: center;
+
+  animation: scrapbook-search-entry 0.45s ease;
 }
 
 /* =====================================
@@ -735,14 +740,15 @@ body {
 .loading-icon {
   display: block;
 
-  font-size: 2.5rem;
+  width: 64px;
+  height: 64px;
 
-  color: #722f37;
+  margin: 0 auto 16px;
 
-  margin-bottom: 16px;
+  object-fit: contain;
 
   animation:
-    float 1.4s infinite ease-in-out;
+    hourglass-flip 2.4s ease-in-out infinite;
 }
 
 .loading-card h3 {
@@ -929,6 +935,28 @@ body {
   }
 }
 
+@keyframes hourglass-flip {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  40% {
+    transform: rotate(180deg);
+  }
+
+  55% {
+    transform: rotate(180deg);
+  }
+
+  95% {
+    transform: rotate(360deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 @keyframes float {
   0% {
     transform: translateY(0);
@@ -940,5 +968,23 @@ body {
 
   100% {
     transform: translateY(0);
+  }
+}
+
+@keyframes scrapbook-search-entry {
+  from {
+    opacity: 0;
+
+    transform:
+      translateY(10px)
+      rotate(-0.35deg);
+  }
+
+  to {
+    opacity: 1;
+
+    transform:
+      translateY(0)
+      rotate(-0.35deg);
   }
 }

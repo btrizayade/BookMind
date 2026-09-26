@@ -8,6 +8,8 @@ import {
 
 import "./App.css";
 
+import loadingIcon from "./assets/loading.png";
+
 import Sidebar from "./components/Sidebar/Sidebar";
 import Topbar from "./components/Topbar/Topbar";
 import BookView from "./components/Book/Book";
@@ -329,9 +331,12 @@ function App() {
                     />
                   ) : loading ? (
                     <div className="loading-card">
-                      <span className="loading-icon">
-                        𓇼 ⋆.˚ .⋆ 𓇼
-                      </span>
+                      <img
+                        className="loading-icon"
+                        src={loadingIcon}
+                        alt=""
+                        aria-hidden="true"
+                      />
 
                       <h3>Searching...</h3>
 
