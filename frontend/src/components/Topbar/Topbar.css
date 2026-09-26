@@ -1,3 +1,11 @@
+:root {
+  --topbar-height: 30px;
+}
+
+/* =====================================
+   TOPBAR
+===================================== */
+
 .topbar {
   position: fixed;
 
@@ -6,7 +14,7 @@
   right: 0;
 
   width: 100%;
-  height: 30px;
+  height: var(--topbar-height);
 
   display: flex;
   align-items: center;
@@ -18,6 +26,10 @@
 
   z-index: 100;
 }
+
+/* =====================================
+   LOGIN / BACK BUTTON
+===================================== */
 
 .topbar-login {
   padding: 0;
@@ -48,9 +60,17 @@
   transform: translateY(0px);
 }
 
+/* =====================================
+   MOBILE
+===================================== */
+
 @media (max-width: 750px) {
+  :root {
+    --topbar-height: 42px;
+  }
+
   .topbar {
-    height: 42px;
+    height: var(--topbar-height);
 
     padding: 0 20px;
   }

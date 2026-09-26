@@ -295,272 +295,274 @@ function App() {
         onBack={() => setShowLogin(false)}
       />
 
-      {showLogin ? (
-        <Login
-          onBack={() => setShowLogin(false)}
-        />
-      ) : (
-        <div className="container">
-          <div
-            className={`layout ${
-              hasContent
-                ? "layout-content"
-                : "layout-empty"
-            } ${
-              hasContent && isSidebarCollapsed
-                ? "layout-sidebar-collapsed"
-                : ""
-            }`}
-          >
-            <Sidebar
-              onSearch={handleOpenSearch}
-              onRecommendations={handleRecommendations}
-              hasContent={hasContent}
-              isSidebarCollapsed={isSidebarCollapsed}
-              onToggle={handleToggleSidebar}
-            />
+      <div className="page-scroll">
+        {showLogin ? (
+          <Login
+            onBack={() => setShowLogin(false)}
+          />
+        ) : (
+          <div className="container">
+            <div
+              className={`layout ${
+                hasContent
+                  ? "layout-content"
+                  : "layout-empty"
+              } ${
+                hasContent && isSidebarCollapsed
+                  ? "layout-sidebar-collapsed"
+                  : ""
+              }`}
+            >
+              <Sidebar
+                onSearch={handleOpenSearch}
+                onRecommendations={handleRecommendations}
+                hasContent={hasContent}
+                isSidebarCollapsed={isSidebarCollapsed}
+                onToggle={handleToggleSidebar}
+              />
 
-            {hasContent && (
-              <main className="book-area">
-                {mainContent === "recommendations" ? (
-                  <Recommendations
-                    onSelectBook={handleSelectRecommendedBook}
-                  />
-                ) : loading ? (
-                  <div className="loading-card">
-                    <span className="loading-icon">
-                      𓇼 ⋆.˚ .⋆ 𓇼
-                    </span>
+              {hasContent && (
+                <main className="book-area">
+                  {mainContent === "recommendations" ? (
+                    <Recommendations
+                      onSelectBook={handleSelectRecommendedBook}
+                    />
+                  ) : loading ? (
+                    <div className="loading-card">
+                      <span className="loading-icon">
+                        𓇼 ⋆.˚ .⋆ 𓇼
+                      </span>
 
-                    <h3>Searching...</h3>
+                      <h3>Searching...</h3>
 
-                    <p>
-                      We are searching for your next great read!
-                    </p>
-                  </div>
-                ) : error ? (
-                  <div className="error-card">
-                    <div className="error-icon">☕︎</div>
-
-                    <div>
-                      <h3>Book not found</h3>
-                      <p>{error}</p>
+                      <p>
+                        We are searching for your next great read!
+                      </p>
                     </div>
-                  </div>
-                ) : book ? (
-                  <BookView book={book} />
-                ) : (
-                  <form
-                    className="search-content"
-                    onSubmit={handleSearch}
-                  >
-                    <span
-                      className="search-tape"
-                      aria-hidden="true"
-                    />
+                  ) : error ? (
+                    <div className="error-card">
+                      <div className="error-icon">☕︎</div>
 
-                    <span
-                      className="search-paper-label"
-                      aria-hidden="true"
-                    />
-
-                    <h1>Search a Book</h1>
-
-                    <div
-                      className="search-decoration"
-                      aria-hidden="true"
+                      <div>
+                        <h3>Book not found</h3>
+                        <p>{error}</p>
+                      </div>
+                    </div>
+                  ) : book ? (
+                    <BookView book={book} />
+                  ) : (
+                    <form
+                      className="search-content"
+                      onSubmit={handleSearch}
                     >
-                      <div />
-                      <span>♡</span>
-                      <div />
-                    </div>
-
-                    <p>
-                      Search for a book and explore its information,
-                      reading profile and AI analysis.
-                    </p>
-
-                    <div className="search-input-wrapper">
-                      <input
-                        type="text"
-                        placeholder="Type a book title..."
-                        value={title}
-                        onChange={(event) => {
-                          setTitle(event.target.value);
-                          setHighlightedSuggestionIndex(-1);
-                        }}
-                        onKeyDown={(
-                          event: KeyboardEvent<HTMLInputElement>
-                        ) => {
-                          if (
-                            !showSuggestions ||
-                            suggestions.length === 0
-                          ) {
-                            return;
-                          }
-
-                          if (event.key === "ArrowDown") {
-                            event.preventDefault();
-
-                            setHighlightedSuggestionIndex(
-                              (current) =>
-                                current <
-                                suggestions.length - 1
-                                  ? current + 1
-                                  : 0
-                            );
-
-                            return;
-                          }
-
-                          if (event.key === "ArrowUp") {
-                            event.preventDefault();
-
-                            setHighlightedSuggestionIndex(
-                              (current) =>
-                                current > 0
-                                  ? current - 1
-                                  : suggestions.length - 1
-                            );
-
-                            return;
-                          }
-
-                          if (event.key === "Escape") {
-                            event.preventDefault();
-
-                            setShowSuggestions(false);
-                            setHighlightedSuggestionIndex(-1);
-
-                            return;
-                          }
-
-                          if (
-                            event.key === "Enter" &&
-                            highlightedSuggestionIndex >= 0
-                          ) {
-                            event.preventDefault();
-
-                            const suggestion =
-                              suggestions[
-                                highlightedSuggestionIndex
-                              ];
-
-                            if (suggestion) {
-                              void handleSelectSuggestion(
-                                suggestion
-                              );
-                            }
-                          }
-                        }}
-                        onFocus={() => {
-                          if (suggestions.length > 0) {
-                            setShowSuggestions(true);
-                          }
-
-                          setHighlightedSuggestionIndex(-1);
-                        }}
-                        autoComplete="off"
+                      <span
+                        className="search-tape"
+                        aria-hidden="true"
                       />
 
-                      {showSuggestions && (
-                        <div className="suggestions-dropdown">
-                          {suggestionsLoading && (
-                            <div className="suggestions-loading">
-                              Searching books...
-                            </div>
-                          )}
+                      <span
+                        className="search-paper-label"
+                        aria-hidden="true"
+                      />
 
-                          {!suggestionsLoading &&
-                            suggestions.map(
-                              (suggestion, index) => (
-                                <button
-                                  id={`book-suggestion-${index}`}
-                                  key={`${suggestion.source}-${suggestion.source_id}`}
-                                  type="button"
-                                  role="option"
-                                  aria-selected={
-                                    index ===
-                                    highlightedSuggestionIndex
-                                  }
-                                  className={`suggestion-item ${
-                                    index ===
-                                    highlightedSuggestionIndex
-                                      ? "suggestion-item-highlighted"
-                                      : ""
-                                  }`}
-                                  onMouseDown={(event) => {
-                                    event.preventDefault();
-                                  }}
-                                  onClick={() =>
-                                    handleSelectSuggestion(
-                                      suggestion
-                                    )
-                                  }
-                                >
-                                  <div className="suggestion-cover">
-                                    {suggestion.thumbnail ? (
-                                      <img
-                                        src={
-                                          suggestion.thumbnail
-                                        }
-                                        alt=""
-                                      />
-                                    ) : (
-                                      <div className="suggestion-cover-placeholder">
-                                        📖
-                                      </div>
-                                    )}
-                                  </div>
+                      <h1>Search a Book</h1>
 
-                                  <div className="suggestion-info">
-                                    <strong>
-                                      {suggestion.title}
-                                    </strong>
+                      <div
+                        className="search-decoration"
+                        aria-hidden="true"
+                      >
+                        <div />
+                        <span>♡</span>
+                        <div />
+                      </div>
 
-                                    {suggestion.subtitle && (
-                                      <span className="suggestion-subtitle">
-                                        {
-                                          suggestion.subtitle
-                                        }
-                                      </span>
-                                    )}
+                      <p>
+                        Search for a book and explore its information,
+                        reading profile and AI analysis.
+                      </p>
 
-                                    <span className="suggestion-meta">
-                                      {suggestion.authors.length > 0
-                                        ? suggestion.authors.join(
-                                            ", "
-                                          )
-                                        : "Unknown author"}
+                      <div className="search-input-wrapper">
+                        <input
+                          type="text"
+                          placeholder="Type a book title..."
+                          value={title}
+                          onChange={(event) => {
+                            setTitle(event.target.value);
+                            setHighlightedSuggestionIndex(-1);
+                          }}
+                          onKeyDown={(
+                            event: KeyboardEvent<HTMLInputElement>
+                          ) => {
+                            if (
+                              !showSuggestions ||
+                              suggestions.length === 0
+                            ) {
+                              return;
+                            }
 
-                                      {suggestion.year &&
-                                        ` · ${suggestion.year}`}
-                                    </span>
-                                  </div>
-                                </button>
-                              )
+                            if (event.key === "ArrowDown") {
+                              event.preventDefault();
+
+                              setHighlightedSuggestionIndex(
+                                (current) =>
+                                  current <
+                                  suggestions.length - 1
+                                    ? current + 1
+                                    : 0
+                              );
+
+                              return;
+                            }
+
+                            if (event.key === "ArrowUp") {
+                              event.preventDefault();
+
+                              setHighlightedSuggestionIndex(
+                                (current) =>
+                                  current > 0
+                                    ? current - 1
+                                    : suggestions.length - 1
+                              );
+
+                              return;
+                            }
+
+                            if (event.key === "Escape") {
+                              event.preventDefault();
+
+                              setShowSuggestions(false);
+                              setHighlightedSuggestionIndex(-1);
+
+                              return;
+                            }
+
+                            if (
+                              event.key === "Enter" &&
+                              highlightedSuggestionIndex >= 0
+                            ) {
+                              event.preventDefault();
+
+                              const suggestion =
+                                suggestions[
+                                  highlightedSuggestionIndex
+                                ];
+
+                              if (suggestion) {
+                                void handleSelectSuggestion(
+                                  suggestion
+                                );
+                              }
+                            }
+                          }}
+                          onFocus={() => {
+                            if (suggestions.length > 0) {
+                              setShowSuggestions(true);
+                            }
+
+                            setHighlightedSuggestionIndex(-1);
+                          }}
+                          autoComplete="off"
+                        />
+
+                        {showSuggestions && (
+                          <div className="suggestions-dropdown">
+                            {suggestionsLoading && (
+                              <div className="suggestions-loading">
+                                Searching books...
+                              </div>
                             )}
-                        </div>
-                      )}
-                    </div>
 
-                    <button type="submit">
-                      Search for Book
-                    </button>
+                            {!suggestionsLoading &&
+                              suggestions.map(
+                                (suggestion, index) => (
+                                  <button
+                                    id={`book-suggestion-${index}`}
+                                    key={`${suggestion.source}-${suggestion.source_id}`}
+                                    type="button"
+                                    role="option"
+                                    aria-selected={
+                                      index ===
+                                      highlightedSuggestionIndex
+                                    }
+                                    className={`suggestion-item ${
+                                      index ===
+                                      highlightedSuggestionIndex
+                                        ? "suggestion-item-highlighted"
+                                        : ""
+                                    }`}
+                                    onMouseDown={(event) => {
+                                      event.preventDefault();
+                                    }}
+                                    onClick={() =>
+                                      handleSelectSuggestion(
+                                        suggestion
+                                      )
+                                    }
+                                  >
+                                    <div className="suggestion-cover">
+                                      {suggestion.thumbnail ? (
+                                        <img
+                                          src={
+                                            suggestion.thumbnail
+                                          }
+                                          alt=""
+                                        />
+                                      ) : (
+                                        <div className="suggestion-cover-placeholder">
+                                          📖
+                                        </div>
+                                      )}
+                                    </div>
 
-                    <span
-                      className="search-note"
-                      aria-hidden="true"
-                    >
-                      a little literary treasure awaits for you
-                    </span>
-                  </form>
-                )}
-              </main>
-            )}
+                                    <div className="suggestion-info">
+                                      <strong>
+                                        {suggestion.title}
+                                      </strong>
+
+                                      {suggestion.subtitle && (
+                                        <span className="suggestion-subtitle">
+                                          {
+                                            suggestion.subtitle
+                                          }
+                                        </span>
+                                      )}
+
+                                      <span className="suggestion-meta">
+                                        {suggestion.authors.length > 0
+                                          ? suggestion.authors.join(
+                                              ", "
+                                            )
+                                          : "Unknown author"}
+
+                                        {suggestion.year &&
+                                          ` · ${suggestion.year}`}
+                                      </span>
+                                    </div>
+                                  </button>
+                                )
+                              )}
+                          </div>
+                        )}
+                      </div>
+
+                      <button type="submit">
+                        Search for Book
+                      </button>
+
+                      <span
+                        className="search-note"
+                        aria-hidden="true"
+                      >
+                        a little literary treasure awaits for you
+                      </span>
+                    </form>
+                  )}
+                </main>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </>
   );
 }

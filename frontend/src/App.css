@@ -15,6 +15,44 @@
 body {
   font-family: Inter, sans-serif;
   background: #f7efe4;
+
+  /* A rolagem da aplicação fica somente em .page-scroll. */
+  overflow: hidden;
+}
+
+/* =====================================
+   PAGE SCROLL
+   Scrollbar começa abaixo da Topbar
+===================================== */
+
+.page-scroll {
+  height: calc(100vh - var(--topbar-height));
+
+  margin-top: var(--topbar-height);
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  /* Chrome, Edge e navegadores Chromium */
+  scrollbar-width: thin;
+  scrollbar-color: #722f37 transparent;
+}
+
+.page-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.page-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.page-scroll::-webkit-scrollbar-thumb {
+  background: #722f37;
+  border-radius: 10px;
+}
+
+.page-scroll::-webkit-scrollbar-thumb:hover {
+  background: #5d252c;
 }
 
 /* =====================================
@@ -22,7 +60,7 @@ body {
 ===================================== */
 
 .container {
-  min-height: 100vh;
+  min-height: calc(100vh - var(--topbar-height));
   width: 100%;
 
   padding: 76px 40px 32px;

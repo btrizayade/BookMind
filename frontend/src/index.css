@@ -1,11 +1,32 @@
+/* =====================================
+   GLOBAL RESET
+===================================== */
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* =====================================
+   HTML / BODY / ROOT
+===================================== */
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+}
+
+html {
+  height: 100%;
+}
+
 body {
-    margin: 0;
-    font-family: Inter, sans-serif;
-    background: #f7efe4;
+  margin: 0;
+
+  font-family: Inter, sans-serif;
+
+  background: #f7efe4;
 }
