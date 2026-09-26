@@ -75,14 +75,6 @@ AUTOCOMPLETE_DERIVED_TERMS = {
     "manual",
 }
 
-
-
-# Cache curto para autocomplete.
-# A ideia é evitar repetir chamadas ao Google Books durante a mesma sessão
-# e aproveitar consultas que o usuário acabou de fazer.
-AUTOCOMPLETE_CACHE_TTL = 300
-_autocomplete_cache: dict[str, tuple[float, list[dict]]] = {}
-
 # Termos/expressões que normalmente identificam materiais complementares
 # e coleções, em vez da obra procurada. Mantemos termos genéricos como
 # "guide" e "philosophy" fora desta lista para não eliminar livros legítimos.
@@ -2591,6 +2583,10 @@ def _map_google_book(
         "imageLinks",
         {},
     )
+    thumbnail = image_links.get("thumbnail")
+
+    if thumbnail and thumbnail.startswith("http://"):
+        thumbnail = "https://" + thumbnail[7:]
 
     return BookResponse(
         title=volume.get(
@@ -2626,9 +2622,7 @@ def _map_google_book(
         ratings_count=volume.get(
             "ratingsCount"
         ),
-        thumbnail=image_links.get(
-            "thumbnail"
-        ),
+        thumbnail=thumbnail,
         ai_summary=None,
         book_dna=None,
         reading_profile=None,
