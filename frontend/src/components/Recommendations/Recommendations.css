@@ -4,7 +4,7 @@
 
 .recommendations-page {
     position: relative;
-
+    top: -45px;
     width: 100%;
     max-width: 1000px;
 
@@ -12,11 +12,9 @@
 
     padding: 22px 24px 45px;
 
-    transform: translateY(-55px);
-
     color: #4d3930;
 
-    animation: scrapbook-entry 0.45s ease;
+    animation: scrapbook-entry 0.45s ease-out;
 }
 
 /* =====================================
@@ -1057,7 +1055,7 @@
         opacity: 0;
 
         transform:
-            translateY(10px)
+            translateY(20px)
             rotate(0.35deg);
     }
 

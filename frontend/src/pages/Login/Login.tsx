@@ -69,7 +69,7 @@ function Login({ onBack }: LoginProps) {
           A LITTLE BOOKISH WELCOME
         </p>
 
-        <h1>Welcome to BookMind</h1>
+        <h1>Welcome back to BookMind</h1>
 
         <p className="login-subtitle">
           Discover wonderful stories, one page at a time.

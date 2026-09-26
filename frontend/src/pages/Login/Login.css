@@ -1,5 +1,5 @@
 .login-page {
-  min-height: 100vh;
+  min-height: 90vh;
 
   display: flex;
   flex-direction: column;
@@ -32,7 +32,7 @@
   color: #9b6f63;
 
   font-family: Inter, sans-serif;
-  font-size: 0.48rem;
+  font-size: 0.60rem;
   font-weight: 700;
 
   letter-spacing: 1.8px;
@@ -45,19 +45,19 @@
   color: #722f37;
 
   font-family: "Corinthia", cursive;
-  font-size: clamp(2.5rem, 5vw, 3.4rem);
-  font-weight: 600;
+  font-size: clamp(2rem, 2.75vw, 3rem);
+  font-weight: 550;
 
-  line-height: 0.9;
+  line-height: 1;
 }
 
 .login-subtitle {
-  margin: 7px 0 0;
+  margin: 10px 0 0;
 
   color: #80665a;
 
   font-family: Inter, sans-serif;
-  font-size: 0.70rem;
+  font-size: 0.80rem;
 
   line-height: 1.45;
 }
@@ -129,7 +129,7 @@
   color: #722f37;
 
   font-family: Inter, sans-serif;
-  font-size: 0.5rem;
+  font-size: 0.6rem;
   font-weight: 700;
 
   letter-spacing: 1.5px;
@@ -183,7 +183,7 @@
   left: 27.5%;
   width: 40%;
 
-  margin-top: 3px;
+  margin-top: 6px;
   padding: 8px 14px;
 
   border: none;
