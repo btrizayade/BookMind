@@ -68,8 +68,9 @@
 
 .login-composition {
   position: relative;
+  margin-top: 50px;
 
-  width: min(560px, 92vw);
+  width: min(500px, 80vw);
 
   aspect-ratio: 435 / 404;
 
@@ -97,12 +98,11 @@
 .login-content {
   position: absolute;
 
-  top: 40%;
+  top: 35%;
   left: 19.5%;
 
   width: 67%;
   height: 48%;
-
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -126,7 +126,7 @@
 .login-form label {
   margin-bottom: 5px;
 
-  color: #72574c;
+  color: #722f37;
 
   font-family: Inter, sans-serif;
   font-size: 0.5rem;
@@ -137,13 +137,13 @@
 
 .login-form input {
   width: 100%;
-  height: 34px;
+  height: 30px;
 
   margin-bottom: 11px;
   padding: 0 14px;
 
   border: 1px solid #cdb6a1;
-  border-radius: 14px;
+  border-radius: 18px;
 
   background: rgba(255, 253, 249, 0.8);
 
@@ -178,9 +178,10 @@
 ===================================== */
 
 .login-form button {
-  align-self: center;
-
-  width: 50%;
+  position: absolute;
+  top: 50%;
+  left: 27.5%;
+  width: 40%;
 
   margin-top: 3px;
   padding: 8px 14px;
@@ -193,7 +194,7 @@
   color: #fffaf7;
 
   font-family: Inter, sans-serif;
-  font-size: 0.63rem;
+  font-size: 0.66rem;
   font-weight: 700;
 
   cursor: pointer;
@@ -236,7 +237,8 @@
 ===================================== */
 
 .login-register {
-  margin-top: 9px;
+  margin-top: 48px;
+  margin-left: -15px;
 
   color: #8a7063;
 

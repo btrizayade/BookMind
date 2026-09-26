@@ -2,6 +2,8 @@ import logo from "../../assets/logo.png";
 import miniLogo from "../../assets/minilogo.png";
 import searchIcon from "../../assets/search.png";
 import findIcon from "../../assets/find.png";
+import searchButton from "../../assets/search-button.png";
+import findButton from "../../assets/find-button.png";
 import "./Sidebar.css";
 
 interface SidebarProps {
@@ -101,21 +103,31 @@ function Sidebar({
 
           <div className="divider"></div>
 
-          <button
-            className="sidebar-action"
-            onClick={onSearch}
-            type="button"
-          >
-            Search a Book
-          </button>
+            <button
+              className="sidebar-action image-button"
+              onClick={onSearch}
+              type="button"
+            >
+              <img
+                src={searchButton}
+                alt=""
+                aria-hidden="true"
+              />
+              <span>Search a Book</span>
+            </button>
 
-          <button
-            className="sidebar-action"
-            onClick={onRecommendations}
-            type="button"
-          >
-            Find My Next Book
-          </button>
+            <button
+              className="sidebar-action image-button"
+              onClick={onRecommendations}
+              type="button"
+            >
+              <img
+                src={findButton}
+                alt=""
+                aria-hidden="true"
+              />
+              <span>Find My Next Book</span>
+            </button>
 
           <div className="divider"></div>
 

@@ -25,6 +25,7 @@
     overflow: visible;
 }
 
+
 /* =====================================
    EXPANDED SIDEBAR SURFACE
 ===================================== */
@@ -77,17 +78,19 @@
     align-items: center;
 }
 
+
 /* =====================================
    LOGO
 ===================================== */
 
 .logo {
-    width: 175px;
-
+    width: 250px;
+    height: auto;
     align-self: center;
-
     margin-bottom: 10px;
+
 }
+
 
 /* =====================================
    SUBTITLE
@@ -98,12 +101,13 @@
 
     color: #86675b;
 
-    font-size: 13px;
+    font-size: 15px;
 
     line-height: 1.6;
 
     margin-bottom: 10px;
 }
+
 
 /* =====================================
    DIVIDER
@@ -119,6 +123,7 @@
     margin: 15px 0;
 }
 
+
 /* =====================================
    SEARCH LABEL
 ===================================== */
@@ -132,6 +137,7 @@
 
     margin-bottom: 10px;
 }
+
 
 /* =====================================
    SEARCH INPUT
@@ -153,46 +159,10 @@
     background: white;
 }
 
+
 /* =====================================
    SIDEBAR ACTION BUTTONS
 ===================================== */
-
-.sidebar > button:not(.sidebar-toggle) {
-    width: 100%;
-
-    padding: 16px;
-
-    border: none;
-
-    border-radius: 14px;
-
-    background: #722f37;
-
-    color: white;
-
-    font-weight: 500;
-
-    font-size: 17px;
-
-    margin-bottom: 10px;
-
-    cursor: pointer;
-
-    box-shadow: 0 10px 22px rgba(114, 47, 55, 0.18);
-
-    transition:
-        background 0.2s ease,
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-.sidebar > button:not(.sidebar-toggle):hover {
-    background: #63272f;
-
-    transform: translateY(-2px);
-
-    box-shadow: 0 13px 24px rgba(114, 47, 55, 0.23);
-}
 
 .sidebar-action {
     width: 100%;
@@ -203,15 +173,16 @@
     border-radius: 14px;
 
     background: #722f37;
-    color: white;
+    color: #722f372e;
 
     font-family: inherit;
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 500;
 
     cursor: pointer;
 
-    box-shadow: 0 10px 22px rgba(114, 47, 55, 0.18);
+    box-shadow:
+        0 10px 22px #722f372e;
 
     transition:
         background 0.2s ease,
@@ -224,8 +195,86 @@
 
     transform: translateY(-2px);
 
-    box-shadow: 0 13px 24px rgba(114, 47, 55, 0.23);
+    box-shadow:
+        0 13px 24px rgba(114, 47, 55, 0.23);
 }
+
+
+/* =====================================
+   IMAGE BUTTONS
+===================================== */
+
+.sidebar-action.image-button {
+    position: relative;
+
+    width: 100%;
+
+    padding: 0;
+
+    border: none;
+    border-radius: 0;
+
+    background: transparent;
+
+    box-shadow: none;
+
+    cursor: pointer;
+
+    line-height: 1;
+
+    transition: transform 0.2s ease;
+}
+
+.sidebar-action.image-button img {
+    display: block;
+
+    width: 90%;
+    height: auto;
+
+    margin: 0 auto;
+}
+
+.sidebar-action.image-button span {
+    position: absolute;
+
+    top: 50%;
+    left: 5%;
+
+    transform: translateY(-50%);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 90%;
+
+    padding: 0 18%;
+
+    box-sizing: border-box;
+
+    color: #e5d6d0;
+
+    font-family: Arial, sans-serif;
+    font-size: 19px;
+    font-weight: 600;
+
+    line-height: 1;
+
+    text-align: center;
+
+    white-space: nowrap;
+
+    pointer-events: none;
+}
+
+.sidebar-action.image-button:hover {
+    background: transparent;
+
+    transform: translateY(-2px);
+
+    box-shadow: none;
+}
+
 
 /* =====================================
    SIDEBAR TOGGLE
@@ -272,7 +321,10 @@
         box-shadow 0.2s ease;
 }
 
-/* botão enquanto sidebar está aberta */
+
+/* =====================================
+   BOTÃO ENQUANTO SIDEBAR ESTÁ ABERTA
+===================================== */
 
 .sidebar-toggle-open {
     position: relative;
@@ -308,7 +360,10 @@
     cursor: pointer;
 }
 
-/* botão enquanto sidebar está recolhida */
+
+/* =====================================
+   BOTÃO ENQUANTO SIDEBAR ESTÁ RECOLHIDA
+===================================== */
 
 .sidebar-toggle-collapsed {
     left: 50%;
@@ -333,8 +388,10 @@
 
     transform: translateY(-50%) scale(1.06);
 
-    box-shadow: 0 7px 18px rgba(82, 50, 39, 0.16);
+    box-shadow:
+        0 7px 18px rgba(82, 50, 39, 0.16);
 }
+
 
 /* =====================================
    COLLAPSED SIDEBAR RAIL
@@ -366,6 +423,7 @@
     box-sizing: border-box;
 }
 
+
 .sidebar-rail-toggle,
 .sidebar-rail-action {
     display: flex;
@@ -394,12 +452,14 @@
         box-shadow 0.2s ease;
 }
 
+
 .sidebar-rail-toggle {
     font-family: Arial, sans-serif;
     font-size: 22px;
     font-weight: 400;
     line-height: 1;
 }
+
 
 .sidebar-rail-logo {
     display: block;
@@ -414,6 +474,7 @@
     flex: 0 0 auto;
 }
 
+
 .sidebar-rail-action img {
     display: block;
 
@@ -425,14 +486,17 @@
     margin: 4px 0 4px;
 }
 
+
 .sidebar-rail-toggle:hover,
 .sidebar-rail-action:hover {
     background: #f2e4d8;
 
     transform: scale(1.08);
 
-    box-shadow: 0 4px 10px rgba(114, 47, 55, 0.10);
+    box-shadow:
+        0 4px 10px rgba(114, 47, 55, 0.10);
 }
+
 
 .sidebar-rail-toggle:focus-visible,
 .sidebar-rail-action:focus-visible,
@@ -441,6 +505,7 @@
     outline: 2px solid rgba(114, 47, 55, 0.45);
     outline-offset: 2px;
 }
+
 
 .sidebar-rail-divider {
     width: 20px;
@@ -452,6 +517,7 @@
 
     flex: 0 0 auto;
 }
+
 
 /* =====================================
    QUOTE
