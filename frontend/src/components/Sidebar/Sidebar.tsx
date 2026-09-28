@@ -9,6 +9,7 @@ import "./Sidebar.css";
 interface SidebarProps {
   onSearch: () => void;
   onRecommendations: () => void;
+  onHome: () => void;
   hasContent: boolean;
   isSidebarCollapsed: boolean;
   onToggle: () => void;
@@ -17,6 +18,7 @@ interface SidebarProps {
 function Sidebar({
   onSearch,
   onRecommendations,
+  onHome,
   hasContent,
   isSidebarCollapsed,
   onToggle,
@@ -40,11 +42,19 @@ function Sidebar({
               ‹
             </button>
 
-            <img
-              src={miniLogo}
-              alt="BookMind"
-              className="sidebar-rail-logo"
-            />
+            <button
+              className="sidebar-rail-action sidebar-rail-home"
+              onClick={onHome}
+              aria-label="Back to home"
+              title="Back to home"
+              type="button"
+            >
+              <img
+                src={miniLogo}
+                alt="BookMind"
+                className="sidebar-rail-logo"
+              />
+            </button>
 
             <button
               className="sidebar-rail-action"

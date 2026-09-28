@@ -53,11 +53,12 @@ function App() {
 
   const [showLogin, setShowLogin] = useState(false);
 
+  const [isHomeReturning, setIsHomeReturning] = useState(false);
+
   const searchRequestId = useRef(0);
   const skipAutocompleteRef = useRef(false);
 
   const hasContent = mainContent !== null;
-
   /*
    * AUTOCOMPLETE
    *
@@ -279,6 +280,62 @@ function App() {
   }
 
   /*
+   * VOLTA AO ESTADO INICIAL
+   */
+  function handleHome() {
+    setIsHomeReturning(false);
+
+    searchRequestId.current += 1;
+    skipAutocompleteRef.current = false;
+
+    setTitle("");
+    setBook(null);
+    setLoading(false);
+    setError("");
+
+    setMainContent(null);
+    setIsSidebarCollapsed(false);
+
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setSuggestionsLoading(false);
+    setHighlightedSuggestionIndex(-1);
+  }
+
+  /*
+   * VOLTA DO LOGIN COM UMA ENTRADA SUAVE
+   */
+  function handleTopbarBack() {
+    searchRequestId.current += 1;
+    skipAutocompleteRef.current = false;
+
+    setTitle("");
+    setBook(null);
+    setLoading(false);
+    setError("");
+
+    setMainContent(null);
+    setIsSidebarCollapsed(false);
+
+    setSuggestions([]);
+    setShowSuggestions(false);
+    setSuggestionsLoading(false);
+    setHighlightedSuggestionIndex(-1);
+
+    /*
+     * Usa a mesma linguagem visual da animação scrapbook
+     * já usada no restante do site: fade + pequeno movimento.
+     */
+    setIsHomeReturning(true);
+
+    window.setTimeout(() => {
+      setIsHomeReturning(false);
+    }, 450);
+
+    setShowLogin(false);
+  }
+
+  /*
    * SIDEBAR
    */
   function handleToggleSidebar() {
@@ -294,7 +351,7 @@ function App() {
       <Topbar
         isLoginPage={showLogin}
         onLogin={() => setShowLogin(true)}
-        onBack={() => setShowLogin(false)}
+        onBack={handleTopbarBack}
       />
 
       <div className="page-scroll">
@@ -314,10 +371,19 @@ function App() {
                   ? "layout-sidebar-collapsed"
                   : ""
               }`}
+              style={
+                isHomeReturning
+                  ? {
+                      animation:
+                        "scrapbook-fade 0.45s ease both",
+                    }
+                  : undefined
+              }
             >
               <Sidebar
                 onSearch={handleOpenSearch}
                 onRecommendations={handleRecommendations}
+                onHome={handleHome}
                 hasContent={hasContent}
                 isSidebarCollapsed={isSidebarCollapsed}
                 onToggle={handleToggleSidebar}
