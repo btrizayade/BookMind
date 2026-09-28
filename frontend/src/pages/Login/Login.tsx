@@ -80,14 +80,9 @@ function Login({ onBack }: LoginProps) {
       setLoading(true);
 
       try {
-        const data = await loginUser(
+        await loginUser(
           trimmedEmail,
           password,
-        );
-
-        localStorage.setItem(
-          "bookmind_access_token",
-          data.access_token,
         );
 
         onBack();

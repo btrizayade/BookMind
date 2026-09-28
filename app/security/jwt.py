@@ -16,6 +16,13 @@ if not SECRET_KEY:
         "JWT_SECRET_KEY não encontrada no arquivo .env."
     )
 
+# HS256 depends entirely on the secrecy and strength of this key.
+# Refuse obviously weak production configuration at startup.
+if len(SECRET_KEY) < 32:
+    raise RuntimeError(
+        "JWT_SECRET_KEY deve ter pelo menos 32 caracteres."
+    )
+
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
@@ -29,18 +36,19 @@ def create_access_token(
     Cria um access token JWT para o usuário.
     """
 
+    now = datetime.now(timezone.utc)
+
     expire = (
-        datetime.now(timezone.utc) + expires_delta
+        now + expires_delta
         if expires_delta
-        else datetime.now(timezone.utc)
-        + timedelta(
-            minutes=ACCESS_TOKEN_EXPIRE_MINUTES
-        )
+        else now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
     payload = {
         "sub": subject,
+        "iat": now,
         "exp": expire,
+        "type": "access",
     }
 
     return jwt.encode(
@@ -61,11 +69,19 @@ def decode_access_token(
     """
 
     try:
-        return jwt.decode(
+        payload = jwt.decode(
             token,
             SECRET_KEY,
             algorithms=[ALGORITHM],
+            options={
+                "require": ["sub", "iat", "exp", "type"],
+            },
         )
+
+        if payload.get("type") != "access":
+            return None
+
+        return payload
 
     except InvalidTokenError:
         return None
