@@ -1,4 +1,4 @@
-const API_URL =  "http://localhost:8000";
+const API_URL = "https://bookmind-api.onrender.com";
 
 const CSRF_HEADER_NAME = "X-CSRF-Token";
 

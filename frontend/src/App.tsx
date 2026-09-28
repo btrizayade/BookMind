@@ -17,6 +17,8 @@ import Recommendations from "./components/Recommendations/Recommendations";
 import Login from "./pages/Login/Login";
 
 import {
+  getCurrentUser,
+  logoutUser,
   searchBook,
   suggestBooks,
   type BookSuggestion,
@@ -25,6 +27,13 @@ import {
 import type { Book } from "./types/book";
 
 type MainContent = "search" | "recommendations" | null;
+
+interface CurrentUser {
+  id: number;
+  name: string;
+  email: string;
+  is_active: boolean;
+}
 
 function App() {
   const [title, setTitle] = useState("");
@@ -53,12 +62,49 @@ function App() {
 
   const [showLogin, setShowLogin] = useState(false);
 
+  const [currentUser, setCurrentUser] =
+    useState<CurrentUser | null>(null);
+
   const [isHomeReturning, setIsHomeReturning] = useState(false);
 
   const searchRequestId = useRef(0);
   const skipAutocompleteRef = useRef(false);
 
   const hasContent = mainContent !== null;
+  /*
+   * SESSÃO
+   *
+   * Verifica a sessão existente ao abrir o BookMind
+   * e novamente quando a tela de login é fechada.
+   */
+  useEffect(() => {
+    if (showLogin) {
+      return;
+    }
+
+    let isMounted = true;
+
+    async function loadCurrentUser() {
+      try {
+        const user = await getCurrentUser();
+
+        if (isMounted) {
+          setCurrentUser(user);
+        }
+      } catch {
+        if (isMounted) {
+          setCurrentUser(null);
+        }
+      }
+    }
+
+    void loadCurrentUser();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [showLogin]);
+
   /*
    * AUTOCOMPLETE
    *
@@ -303,6 +349,21 @@ function App() {
   }
 
   /*
+   * LOGOUT
+   */
+  async function handleLogout() {
+    try {
+      await logoutUser();
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      setCurrentUser(null);
+      setShowLogin(false);
+      handleHome();
+    }
+  }
+
+  /*
    * VOLTA DO LOGIN COM UMA ENTRADA SUAVE
    */
   function handleTopbarBack() {
@@ -352,6 +413,8 @@ function App() {
         isLoginPage={showLogin}
         onLogin={() => setShowLogin(true)}
         onBack={handleTopbarBack}
+        userName={currentUser?.name ?? null}
+        onLogout={handleLogout}
       />
 
       <div className="page-scroll">

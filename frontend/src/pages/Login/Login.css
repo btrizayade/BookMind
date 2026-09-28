@@ -31,7 +31,7 @@
 }
 
 .login-eyebrow {
-  margin: -45px 0 4px;
+  margin: -25px 0 4px;
 
   color: #9b6f63;
 
@@ -44,7 +44,7 @@
 }
 
 .login-intro h1 {
-  margin: 0px 0 0;
+  margin: 5px 0 0;
 
   color: #722f37;
 
@@ -235,7 +235,7 @@
 
   color: #9a4d48;
 
-  font-size: 0.55rem;
+  font-size: 0.60rem;
   line-height: 1.35;
 
   text-align: center;

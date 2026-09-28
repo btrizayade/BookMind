@@ -4,11 +4,9 @@
 
 .recommendations-page {
     position: relative;
-    top: -45px;
+    margin-top: -90px;
     width: 100%;
     max-width: 1000px;
-
-    margin: 0 auto;
 
     padding: 22px 24px 45px;
 

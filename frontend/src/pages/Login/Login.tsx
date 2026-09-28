@@ -349,7 +349,7 @@ function Login({ onBack }: LoginProps) {
               {loading
                 ? isSignUp
                   ? "Creating..."
-                  : "Opening..."
+                  : "Entering..."
                 : isSignUp
                   ? "Create account"
                   : "Log in"}

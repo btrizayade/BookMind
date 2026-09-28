@@ -32,10 +32,6 @@ function RightPage({ book }: Props) {
 
       {/* Section label */}
 
-      <span className="book-paper-label">
-        AI BOOK NOTE
-      </span>
-
       <div className="summary-heading">
         <span
           className="summary-heading-icon"
@@ -141,12 +137,6 @@ function RightPage({ book }: Props) {
         </a>
       )}
 
-      <span
-        className="book-handwritten-note"
-        aria-hidden="true"
-      >
-        found between the pages ♡
-      </span>
     </div>
   );
 }

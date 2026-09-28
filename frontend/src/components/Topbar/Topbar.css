@@ -61,6 +61,57 @@
 }
 
 /* =====================================
+   LOGGED USER
+===================================== */
+
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.topbar-greeting {
+  color: #f7efe4;
+
+  font-family: Inter, sans-serif;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+/* =====================================
+   LOGOUT
+===================================== */
+
+.topbar-logout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 15px;
+  height: 30px;
+
+  padding: 0;
+
+  border: none;
+  background: transparent;
+
+  cursor: pointer;
+}
+
+.topbar-logout img {
+  display: block;
+
+  width: 28px;
+  height: 28px;
+
+  object-fit: contain;
+}
+
+.topbar-logout:hover {
+  opacity: 0.75;
+}
+
+/* =====================================
    MOBILE
 ===================================== */
 
@@ -75,7 +126,22 @@
     padding: 0 20px;
   }
 
-  .topbar-login {
+  .topbar-login,
+  .topbar-greeting {
     font-size: 0.72rem;
+  }
+
+  .topbar-user {
+    gap: 7px;
+  }
+
+  .topbar-logout {
+    width: 19px;
+    height: 19px;
+  }
+
+  .topbar-logout img {
+    width: 14px;
+    height: 14px;
   }
 }

@@ -26,14 +26,16 @@ body {
 ===================================== */
 
 .page-scroll {
-  height: calc(100vh - var(--topbar-height));
+  position: fixed;
 
-  margin-top: var(--topbar-height);
+  top: var(--topbar-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
 
   overflow-y: auto;
   overflow-x: hidden;
 
-  /* Chrome, Edge e navegadores Chromium */
   scrollbar-width: thin;
   scrollbar-color: #722f37 transparent;
 }
@@ -144,7 +146,7 @@ body {
    * Ajuste visual da posição vertical
    * da sidebar no estado com conteúdo.
    */
-  transform: translateY(-115px);
+  transform: translateY(-100px);
 }
 
 /* =====================================
@@ -164,7 +166,7 @@ body {
 .layout-content.layout-sidebar-collapsed > .sidebar {
   margin-top: max(
     0px,
-    calc((100vh - 100px) / 2)
+    calc((100vh - 220px) / 2)
   );
 }
 
@@ -176,8 +178,8 @@ body {
   width: 100%;
   min-width: 0;
   position: relative;
-  top: -40px;
-  min-height: 700px;
+  top: 20px;
+  min-height: 600px;
 
   display: flex;
   justify-content: center;
@@ -212,7 +214,7 @@ body {
   transform: rotate(-0.35deg);
 
   /* sobe um pouco na tela */
-  top: -90px;
+  top: -50px;
 
   overflow: visible;
 
@@ -718,7 +720,7 @@ body {
 .loading-card {
   position: relative;
 
-  top: -100px;
+  top: -50px;
 
   width: 360px;
 
@@ -841,7 +843,7 @@ body {
   .layout-content.layout-sidebar-collapsed > .sidebar {
     margin-top: max(
       0px,
-      calc((100vh - 100px) / 2)
+      calc((100vh - 700px) / 2)
     );
   }
 
