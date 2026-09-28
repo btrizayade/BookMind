@@ -1,3 +1,7 @@
+/* =====================================
+   PAGE
+===================================== */
+
 .login-page {
   min-height: 90vh;
 
@@ -27,7 +31,7 @@
 }
 
 .login-eyebrow {
-  margin: 0 0 4px;
+  margin: -45px 0 4px;
 
   color: #9b6f63;
 
@@ -40,7 +44,7 @@
 }
 
 .login-intro h1 {
-  margin: 0;
+  margin: 0px 0 0;
 
   color: #722f37;
 
@@ -52,7 +56,7 @@
 }
 
 .login-subtitle {
-  margin: 10px 0 0;
+  margin: 8px 0 0;
 
   color: #80665a;
 
@@ -68,6 +72,7 @@
 
 .login-composition {
   position: relative;
+
   margin-top: 50px;
 
   width: min(500px, 80vw);
@@ -103,6 +108,7 @@
 
   width: 67%;
   height: 48%;
+
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -174,16 +180,15 @@
 }
 
 /* =====================================
-   LOGIN BUTTON
+   LOGIN / SIGN UP BUTTON
 ===================================== */
 
 .login-form button {
-  position: absolute;
-  top: 50%;
-  left: 27.5%;
-  width: 40%;
+  align-self: center;
 
-  margin-top: 6px;
+  width: 50%;
+
+  margin-top: 3px;
   padding: 8px 14px;
 
   border: none;
@@ -209,11 +214,13 @@
 
 .login-form button:hover:not(:disabled) {
   background: #63272f;
+
   transform: translateY(-1px);
 }
 
 .login-form button:disabled {
   opacity: 0.6;
+
   cursor: wait;
 }
 
@@ -233,17 +240,33 @@
 }
 
 /* =====================================
-   REGISTER
+   SUCCESS
+===================================== */
+
+.login-success {
+  margin: -2px 0 8px;
+
+  color: #6c7652;
+
+  font-size: 0.55rem;
+  line-height: 1.35;
+
+  text-align: center;
+}
+
+/* =====================================
+   REGISTER / SWITCH
 ===================================== */
 
 .login-register {
-  margin-top: 48px;
-  margin-left: -15px;
+  margin-top: 9px;
 
   color: #8a7063;
 
   font-family: Inter, sans-serif;
   font-size: 0.70rem;
+
+  text-align: center;
 }
 
 .login-register button {
@@ -264,17 +287,85 @@
 }
 
 /* =====================================
+   SIGN UP COMPOSITION
+===================================== */
+
+/*
+ * sign-up.png possui uma composição praticamente
+ * quadrada, diferente do asset do login.
+ */
+
+.signup-composition {
+  width: min(500px, 100vw);
+  height: min(550px, 100vw);
+  aspect-ratio: 1 / 1;
+
+  margin-top: 50px;
+}
+
+/* =====================================
+   SIGN UP CONTENT
+===================================== */
+
+.signup-content {
+  top: 28%;
+  left: 26%;
+
+  width: 60%;
+  height: 70%;
+}
+
+.signup-form {
+  width: 88%;
+}
+
+/*
+ * O cadastro possui um campo a mais,
+ * então os campos ficam um pouco menores.
+ */
+
+.signup-form label {
+  margin-bottom: 4px;
+
+  font-size: 0.54rem;
+}
+
+.signup-form input {
+  height: 28px;
+
+  margin-bottom: 7px;
+
+  font-size: 0.62rem;
+}
+
+.signup-form button {
+  width: 55%;
+
+  margin-top: 10px;
+
+  padding: 8px 14px;
+
+  font-size: 0.60rem;
+}
+
+.signup-form + .login-register {
+  margin-top: 15px;
+}
+
+/* =====================================
    ANIMATIONS
 ===================================== */
 
 @keyframes login-intro-entry {
   from {
     opacity: 0;
+
     transform: translateY(-8px);
   }
 
   to {
     opacity: 1;
+
     transform: translateY(0);
   }
 }
@@ -282,6 +373,7 @@
 @keyframes login-paper-entry {
   from {
     opacity: 0;
+
     transform:
       translateY(12px)
       rotate(-1deg);
@@ -289,6 +381,7 @@
 
   to {
     opacity: 1;
+
     transform:
       translateY(0)
       rotate(0);
@@ -306,6 +399,7 @@
 
   .login-intro {
     width: 100%;
+
     margin-bottom: -10px;
   }
 
@@ -323,5 +417,40 @@
 
   .login-form input {
     height: 31px;
+  }
+
+  /* ================================
+     SIGN UP MOBILE
+  ================================= */
+
+  .signup-content {
+    top: 20%;
+    left: 20%;
+
+    width: 60%;
+  }
+
+  .signup-form {
+    width: 92%;
+  }
+
+  .signup-form label {
+    font-size: 0.50rem;
+  }
+
+  .signup-form input {
+    height: 27px;
+
+    margin-bottom: 6px;
+
+    font-size: 0.59rem;
+  }
+
+  .signup-form button {
+    width: 65%;
+
+    padding: 6px 10px;
+
+    font-size: 0.57rem;
   }
 }

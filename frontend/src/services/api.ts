@@ -27,12 +27,26 @@ interface RecommendationRequest {
   genres: string[];
   looking_for: string[];
   mood: string;
-  page_range: "under_200" | "between_200_400" | "over_400";
+  page_range:
+    | "under_200"
+    | "between_200_400"
+    | "over_400";
 }
 
-export async function searchBook(title: string, author?: string | null) {
+/* =====================================
+   SEARCH
+===================================== */
+
+export async function searchBook(
+  title: string,
+  author?: string | null,
+) {
   const response = await fetch(
-    `${API_URL}/books/search?title=${encodeURIComponent(title)}${author ? `&author=${encodeURIComponent(author)}` : ""}`
+    `${API_URL}/books/search?title=${encodeURIComponent(title)}${
+      author
+        ? `&author=${encodeURIComponent(author)}`
+        : ""
+    }`,
   );
 
   if (!response.ok) {
@@ -41,6 +55,10 @@ export async function searchBook(title: string, author?: string | null) {
 
   return response.json();
 }
+
+/* =====================================
+   AUTOCOMPLETE
+===================================== */
 
 export async function suggestBooks(
   query: string,
@@ -52,7 +70,9 @@ export async function suggestBooks(
   }
 
   const response = await fetch(
-    `${API_URL}/books/suggest?q=${encodeURIComponent(trimmedQuery)}`
+    `${API_URL}/books/suggest?q=${encodeURIComponent(
+      trimmedQuery,
+    )}`,
   );
 
   if (!response.ok) {
@@ -62,6 +82,10 @@ export async function suggestBooks(
   return response.json();
 }
 
+/* =====================================
+   RECOMMENDATIONS
+===================================== */
+
 export async function getRecommendations(
   preferences: RecommendationRequest,
 ): Promise<RecommendationResponse> {
@@ -69,11 +93,13 @@ export async function getRecommendations(
     `${API_URL}/books/recommendations`,
     {
       method: "POST",
+
       headers: {
         "Content-Type": "application/json",
       },
+
       body: JSON.stringify(preferences),
-    }
+    },
   );
 
   if (!response.ok) {
@@ -83,10 +109,25 @@ export async function getRecommendations(
   return response.json();
 }
 
+/* =====================================
+   AUTHENTICATION
+===================================== */
+
 export interface LoginResponse {
   access_token: string;
   token_type: string;
 }
+
+export interface RegisterResponse {
+  id: number;
+  name: string;
+  email: string;
+  is_active: boolean;
+}
+
+/* =====================================
+   LOGIN
+===================================== */
 
 export async function loginUser(
   email: string,
@@ -96,9 +137,11 @@ export async function loginUser(
     `${API_URL}/auth/login`,
     {
       method: "POST",
+
       headers: {
         "Content-Type": "application/json",
       },
+
       body: JSON.stringify({
         email,
         password,
@@ -112,6 +155,44 @@ export async function loginUser(
     throw new Error(
       data?.detail ??
         "Invalid email or password.",
+    );
+  }
+
+  return data;
+}
+
+/* =====================================
+   REGISTER
+===================================== */
+
+export async function registerUser(
+  name: string,
+  email: string,
+  password: string,
+): Promise<RegisterResponse> {
+  const response = await fetch(
+    `${API_URL}/auth/register`,
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify({
+        name,
+        email,
+        password,
+      }),
+    },
+  );
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(
+      data?.detail ??
+        "We could not create your account. Please try again.",
     );
   }
 

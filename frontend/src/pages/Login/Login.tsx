@@ -1,10 +1,15 @@
 import {
   useState,
-  type SyntheticEvent,
+  type FormEvent,
 } from "react";
 
 import loginPaper from "../../assets/bookmind-login-paper.png";
-import { loginUser } from "../../services/api";
+import signupPaper from "../../assets/sign-up.png";
+
+import {
+  loginUser,
+  registerUser,
+} from "../../services/api";
 
 import "./Login.css";
 
@@ -12,114 +17,315 @@ interface LoginProps {
   onBack: () => void;
 }
 
-function Login({ onBack }: LoginProps) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+type AuthMode = "login" | "signup";
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+function Login({ onBack }: LoginProps) {
+  const [mode, setMode] =
+    useState<AuthMode>("login");
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] =
+    useState("");
+  const [confirmPassword, setConfirmPassword] =
+    useState("");
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
+
+  const [success, setSuccess] =
+    useState("");
+
+  function switchMode(nextMode: AuthMode) {
+    setMode(nextMode);
+
+    setError("");
+    setSuccess("");
+
+    setPassword("");
+    setConfirmPassword("");
+  }
 
   async function handleSubmit(
-    event: SyntheticEvent<HTMLFormElement>,
+    event: FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
 
     setError("");
+    setSuccess("");
 
-    const trimmedEmail = email.trim();
+    const trimmedEmail =
+      email.trim();
 
-    if (!trimmedEmail || !password) {
+    /* =====================================
+       LOGIN
+    ===================================== */
+
+    if (mode === "login") {
+      if (!trimmedEmail || !password) {
+        setError(
+          "Please enter your email and password.",
+        );
+
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const data = await loginUser(
+          trimmedEmail,
+          password,
+        );
+
+        localStorage.setItem(
+          "bookmind_access_token",
+          data.access_token,
+        );
+
+        onBack();
+      } catch (err) {
+        console.error(err);
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : "We could not log you in. Please try again.",
+        );
+      } finally {
+        setLoading(false);
+      }
+
+      return;
+    }
+
+    /* =====================================
+       SIGN UP
+    ===================================== */
+
+    const trimmedName =
+      name.trim();
+
+    if (!trimmedName) {
       setError(
-        "Please enter your email and password.",
+        "Please enter your name.",
       );
+
+      return;
+    }
+
+    if (!trimmedEmail) {
+      setError(
+        "Please enter your email.",
+      );
+
+      return;
+    }
+
+    if (!password) {
+      setError(
+        "Please create a password.",
+      );
+
+      return;
+    }
+
+    if (password.length < 8) {
+      setError(
+        "Your password must contain at least 8 characters.",
+      );
+
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError(
+        "Passwords do not match.",
+      );
+
       return;
     }
 
     setLoading(true);
 
     try {
-      const data = await loginUser(
+      await registerUser(
+        trimmedName,
         trimmedEmail,
         password,
       );
 
-      localStorage.setItem(
-        "bookmind_access_token",
-        data.access_token,
-      );
+      /*
+       * Volta para o login depois de criar
+       * a conta e mantém o email preenchido.
+       */
+      setMode("login");
 
-      onBack();
+      setPassword("");
+      setConfirmPassword("");
+
+      setSuccess(
+        "Account created successfully. You can now log in.",
+      );
     } catch (err) {
       console.error(err);
 
       setError(
         err instanceof Error
           ? err.message
-          : "We could not log you in. Please try again.",
+          : "We could not create your account. Please try again.",
       );
     } finally {
       setLoading(false);
     }
   }
 
+  const isSignUp =
+    mode === "signup";
+
   return (
     <main className="login-page">
       <div className="login-intro">
         <p className="login-eyebrow">
-          A LITTLE BOOKISH WELCOME
+          {isSignUp
+            ? "A LITTLE BOOKISH BEGINNING"
+            : "A LITTLE BOOKISH WELCOME"}
         </p>
 
-        <h1>Welcome back to BookMind</h1>
+        <h1>
+          {isSignUp
+            ? "Join BookMind"
+            : "Welcome back to BookMind"}
+        </h1>
 
         <p className="login-subtitle">
-          Discover wonderful stories, one page at a time.
+          {isSignUp
+            ? "Create your little reading corner."
+            : "Discover wonderful stories, one page at a time."}
         </p>
       </div>
 
-      <section className="login-composition">
+      <section
+        className={`login-composition ${
+          isSignUp
+            ? "signup-composition"
+            : ""
+        }`}
+      >
         <img
-          src={loginPaper}
+          src={
+            isSignUp
+              ? signupPaper
+              : loginPaper
+          }
           alt=""
           className="login-paper"
           aria-hidden="true"
         />
 
-        <div className="login-content">
+        <div
+          className={`login-content ${
+            isSignUp
+              ? "signup-content"
+              : ""
+          }`}
+        >
           <form
-            className="login-form"
+            className={`login-form ${
+              isSignUp
+                ? "signup-form"
+                : ""
+            }`}
             onSubmit={handleSubmit}
           >
-            <label htmlFor="login-email">
-              LOGIN
+            {isSignUp && (
+              <>
+                <label htmlFor="signup-name">
+                  NAME
+                </label>
+
+                <input
+                  id="signup-name"
+                  name="name"
+                  type="text"
+                  placeholder="your name"
+                  value={name}
+                  onChange={(event) =>
+                    setName(
+                      event.target.value,
+                    )
+                  }
+                  autoComplete="name"
+                />
+              </>
+            )}
+
+            <label htmlFor="auth-email">
+              EMAIL
             </label>
 
             <input
-              id="login-email"
+              id="auth-email"
               name="email"
               type="email"
               placeholder="your@email.com"
               value={email}
               onChange={(event) =>
-                setEmail(event.target.value)
+                setEmail(
+                  event.target.value,
+                )
               }
               autoComplete="email"
             />
 
-            <label htmlFor="login-password">
-              SENHA
+            <label htmlFor="auth-password">
+              PASSWORD
             </label>
 
             <input
-              id="login-password"
+              id="auth-password"
               name="password"
               type="password"
               placeholder="••••••••"
               value={password}
               onChange={(event) =>
-                setPassword(event.target.value)
+                setPassword(
+                  event.target.value,
+                )
               }
-              autoComplete="current-password"
+              autoComplete={
+                isSignUp
+                  ? "new-password"
+                  : "current-password"
+              }
             />
+
+            {isSignUp && (
+              <>
+                <label htmlFor="signup-confirm-password">
+                  CONFIRM PASSWORD
+                </label>
+
+                <input
+                  id="signup-confirm-password"
+                  name="confirmPassword"
+                  type="password"
+                  placeholder="••••••••"
+                  value={
+                    confirmPassword
+                  }
+                  onChange={(event) =>
+                    setConfirmPassword(
+                      event.target.value,
+                    )
+                  }
+                  autoComplete="new-password"
+                />
+              </>
+            )}
 
             {error && (
               <p className="login-error">
@@ -127,23 +333,44 @@ function Login({ onBack }: LoginProps) {
               </p>
             )}
 
+            {success && (
+              <p className="login-success">
+                {success}
+              </p>
+            )}
+
             <button
               type="submit"
               disabled={loading}
             >
-              {loading ? "Opening..." : "Log in"}
+              {loading
+                ? isSignUp
+                  ? "Creating..."
+                  : "Opening..."
+                : isSignUp
+                  ? "Create account"
+                  : "Log in"}
             </button>
           </form>
 
           <p className="login-register">
-            Don't have an account?{" "}
+            {isSignUp
+              ? "Already have an account?"
+              : "Don't have an account?"}{" "}
+
             <button
               type="button"
-              onClick={() => {
-                // Cadastro será implementado depois.
-              }}
+              onClick={() =>
+                switchMode(
+                  isSignUp
+                    ? "login"
+                    : "signup",
+                )
+              }
             >
-              Sign up
+              {isSignUp
+                ? "Log in"
+                : "Sign up"}
             </button>
           </p>
         </div>
