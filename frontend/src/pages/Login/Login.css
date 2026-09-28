@@ -114,6 +114,8 @@
   align-items: center;
 
   text-align: center;
+
+  animation: login-content-entry 0.45s ease 0.08s both;
 }
 
 /* =====================================
@@ -385,6 +387,18 @@
     transform:
       translateY(0)
       rotate(0);
+  }
+}
+
+@keyframes login-content-entry {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

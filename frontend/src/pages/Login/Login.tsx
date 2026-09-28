@@ -23,6 +23,9 @@ function Login({ onBack }: LoginProps) {
   const [mode, setMode] =
     useState<AuthMode>("login");
 
+  const [animationKey, setAnimationKey] =
+    useState(0);
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] =
@@ -41,6 +44,7 @@ function Login({ onBack }: LoginProps) {
 
   function switchMode(nextMode: AuthMode) {
     setMode(nextMode);
+    setAnimationKey((current) => current + 1);
 
     setError("");
     setSuccess("");
@@ -188,7 +192,10 @@ function Login({ onBack }: LoginProps) {
 
   return (
     <main className="login-page">
-      <div className="login-intro">
+      <div
+        key={`intro-${animationKey}`}
+        className="login-intro"
+      >
         <p className="login-eyebrow">
           {isSignUp
             ? "A LITTLE BOOKISH BEGINNING"
@@ -209,6 +216,7 @@ function Login({ onBack }: LoginProps) {
       </div>
 
       <section
+        key={`composition-${animationKey}`}
         className={`login-composition ${
           isSignUp
             ? "signup-composition"
