@@ -1,169 +1,173 @@
 from app.database.session import SessionLocal
-from app.services.google_books_service import search_books
+from app.models.book import Book
 
 
-# ============================================================
-# LIVROS DO SEED
-# ============================================================
+BOOKS = [{'title': 'The Teller of Small Fortunes', 'authors': 'Julie Leong', 'page_count': 352, 'categories': 'Fantasy, Epic Fantasy', 'summary': 'A fortune teller who travels from town to town finds an unexpected family and a mystery that changes the quiet life she has built.', 'rating': 4.1, 'dna': [46, 92, 64, 10, 30, 4, 14], 'profile': [82, 90, 66, 30, 40, 82, 14, 96, 68], 'themes': ['fortune telling', 'friendship', 'found family'], 'atmosphere': ['cozy', 'whimsical', 'adventurous'], 'elements': ['traveling troupe', 'fortune teller', 'found family']}, {'title': 'The Spellshop', 'authors': 'Sarah Beth Durst', 'page_count': 384, 'categories': 'Fantasy, Epic Fantasy', 'summary': 'A reclusive librarian and spellcrafter opens a hidden shop on an island and finds community, romance, and trouble following her.', 'rating': 4.1, 'dna': [46, 92, 64, 10, 30, 4, 14], 'profile': [82, 90, 66, 30, 40, 82, 14, 96, 68], 'themes': ['magic', 'community', 'love'], 'atmosphere': ['cozy', 'whimsical', 'romantic'], 'elements': ['island', 'library', 'spellcraft']}, {'title': 'The Phoenix Keeper', 'authors': 'S. A. MacLean', 'page_count': 400, 'categories': 'Fantasy, Epic Fantasy', 'summary': 'A young woman devoted to magical creatures becomes involved with a mysterious phoenix and a conflict that threatens the world she protects.', 'rating': 4.0, 'dna': [46, 92, 64, 10, 30, 4, 14], 'profile': [82, 90, 66, 30, 40, 82, 14, 96, 68], 'themes': ['magic', 'creatures', 'conservation'], 'atmosphere': ['lush', 'adventurous', 'romantic'], 'elements': ['phoenix', 'magical sanctuary', 'secret society']}, {'title': 'The Hexologists', 'authors': 'Josiah Bancroft', 'page_count': 400, 'categories': 'Fantasy, Epic Fantasy', 'summary': 'A married pair of professional detectives who solve supernatural crimes investigate a strange case involving magic, murder, and a missing heir.', 'rating': 4.0, 'dna': [46, 92, 64, 10, 30, 4, 14], 'profile': [82, 90, 66, 30, 40, 82, 14, 96, 68], 'themes': ['magic', 'murder', 'marriage'], 'atmosphere': ['witty', 'mysterious', 'whimsical'], 'elements': ['magical detectives', 'London', 'occult case']}, {'title': 'A Steeping of Blood', 'authors': 'Hafsah Faizal', 'page_count': 400, 'categories': 'Fantasy, Epic Fantasy', 'summary': 'A young criminal mastermind continues a dangerous struggle involving vampires, found family, and a conspiracy threatening her world.', 'rating': 4.1, 'dna': [46, 92, 64, 10, 30, 4, 14], 'profile': [82, 90, 66, 30, 40, 82, 14, 96, 68], 'themes': ['vampires', 'heist', 'found family'], 'atmosphere': ['gothic', 'romantic', 'dark'], 'elements': ['vampire society', 'heist', 'conspiracy']}, {'title': 'Immortal Dark', 'authors': 'Tigest Girma', 'page_count': 416, 'categories': 'Fantasy, Epic Fantasy', 'summary': 'A young woman enters a prestigious academy haunted by vampire politics, ancient magic, and a dangerous legacy.', 'rating': 4.0, 'dna': [46, 92, 64, 10, 30, 4, 14], 'profile': [82, 90, 66, 30, 40, 82, 14, 96, 68], 'themes': ['vampires', 'academia', 'identity'], 'atmosphere': ['dark academia', 'gothic', 'romantic'], 'elements': ['university', 'vampires', 'Ethiopian mythology']}, {'title': 'The Book of Love', 'authors': 'Kelly Link', 'page_count': 624, 'categories': 'Fantasy, Epic Fantasy', 'summary': 'A strange disappearance draws three young people into a magical story where love, family, and supernatural bargains overlap.', 'rating': 4.0, 'dna': [46, 92, 64, 10, 30, 4, 14], 'profile': [82, 90, 66, 30, 40, 82, 14, 96, 68], 'themes': ['love', 'family', 'magic'], 'atmosphere': ['surreal', 'literary', 'mysterious'], 'elements': ['small town', 'magical realm', 'family']}, {'title': 'The Witchwood Knot', 'authors': 'Olivia Atwater', 'page_count': 352, 'categories': 'Fantasy, Epic Fantasy', 'summary': 'A governess in Victorian England discovers that fairy magic is tangled with a missing child and the hidden rules of the household.', 'rating': 4.0, 'dna': [46, 92, 64, 10, 30, 4, 14], 'profile': [82, 90, 66, 30, 40, 82, 14, 96, 68], 'themes': ['faeries', 'family', 'secrets'], 'atmosphere': ['whimsical', 'historical', 'gothic'], 'elements': ['Victorian England', 'faeries', 'household']}, {'title': 'The Stardust Grail', 'authors': 'Yume Kitasei', 'page_count': 304, 'categories': 'Fantasy, Epic Fantasy', 'summary': 'A woman who recovers alien artifacts is pulled into a mystery involving an ancient object, missing memories, and a journey across the stars.', 'rating': 4.0, 'dna': [46, 92, 64, 10, 30, 4, 14], 'profile': [82, 90, 66, 30, 40, 82, 14, 96, 68], 'themes': ['artifacts', 'identity', 'space'], 'atmosphere': ['dreamlike', 'adventurous', 'mysterious'], 'elements': ['alien artifact', 'space travel', 'archaeology']}, {'title': 'The Amityville Horror', 'authors': 'Jay Anson', 'page_count': 352, 'categories': 'Horror, Psychological Horror', 'summary': 'A family moves into a house with a violent history and reports increasingly disturbing supernatural phenomena.', 'rating': 3.9, 'dna': [8, 84, 60, 8, 94, 2, 4], 'profile': [82, 96, 66, 20, 94, 80, 6, 96, 4], 'themes': ['family', 'haunting', 'fear'], 'atmosphere': ['domestic', 'oppressive', 'supernatural'], 'elements': ['haunted house', 'family', 'paranormal events']}, {'title': 'The Woman in Black', 'authors': 'Susan Hill', 'page_count': 160, 'categories': 'Horror, Psychological Horror', 'summary': 'A solicitor travels to a remote coastal village to settle an estate and encounters a ghost whose presence is linked to tragedy.', 'rating': 4.1, 'dna': [8, 84, 60, 8, 94, 2, 4], 'profile': [82, 96, 66, 20, 94, 80, 6, 96, 4], 'themes': ['grief', 'haunting', 'isolation'], 'atmosphere': ['gothic', 'coastal', 'quiet'], 'elements': ['marsh', 'haunted house', 'ghost']}, {'title': 'Let the Right One In', 'authors': 'John Ajvide Lindqvist', 'page_count': 472, 'categories': 'Horror, Psychological Horror', 'summary': 'A lonely boy in a Swedish suburb befriends a mysterious child whose arrival brings friendship, violence, and vampiric horror.', 'rating': 4.1, 'dna': [8, 84, 60, 8, 94, 2, 4], 'profile': [82, 96, 66, 20, 94, 80, 6, 96, 4], 'themes': ['loneliness', 'friendship', 'vampirism'], 'atmosphere': ['winter', 'melancholic', 'disturbing'], 'elements': ['Sweden', 'vampire', 'suburb']}, {'title': 'The Ritual', 'authors': 'Adam Nevill', 'page_count': 368, 'categories': 'Horror, Psychological Horror', 'summary': 'Four friends hiking through a remote Scandinavian wilderness become trapped by something ancient watching them from the forest.', 'rating': 4.0, 'dna': [8, 84, 60, 8, 94, 2, 4], 'profile': [82, 96, 66, 20, 94, 80, 6, 96, 4], 'themes': ['friendship', 'survival', 'ancient evil'], 'atmosphere': ['forest', 'bleak', 'claustrophobic'], 'elements': ['hiking', 'wilderness', 'cult']}, {'title': 'The Loney', 'authors': 'Andrew Michael Hurley', 'page_count': 336, 'categories': 'Horror, Psychological Horror', 'summary': 'A family pilgrimage to a bleak coastal region becomes increasingly unsettling as local stories and religious beliefs surface.', 'rating': 4.0, 'dna': [8, 84, 60, 8, 94, 2, 4], 'profile': [82, 96, 66, 20, 94, 80, 6, 96, 4], 'themes': ['faith', 'family', 'folklore'], 'atmosphere': ['coastal', 'isolated', 'eerie'], 'elements': ['pilgrimage', 'English coast', 'folk beliefs']}, {'title': 'The Slob', 'authors': 'Aron Beauregard', 'page_count': 157, 'categories': 'Horror, Psychological Horror', 'summary': 'A woman whose obsession with cleanliness leads her to a strange house discovers a horrifying threat that brings old trauma back to the surface.', 'rating': 3.7, 'dna': [8, 84, 60, 8, 94, 2, 4], 'profile': [82, 96, 66, 20, 94, 80, 6, 96, 4], 'themes': ['trauma', 'violence', 'survival'], 'atmosphere': ['extreme', 'grotesque', 'dark'], 'elements': ['vacuum sales', 'haunted house', 'survival']}, {'title': 'Playground', 'authors': 'Aron Beauregard', 'page_count': 344, 'categories': 'Horror, Psychological Horror', 'summary': 'Three families accept money to let their children test dangerous playground equipment at an isolated estate.', 'rating': 3.8, 'dna': [8, 84, 60, 8, 94, 2, 4], 'profile': [82, 96, 66, 20, 94, 80, 6, 96, 4], 'themes': ['survival', 'children', 'violence'], 'atmosphere': ['gory', 'claustrophobic', 'dark'], 'elements': ['gothic estate', 'playground', 'survival']}, {'title': 'Camp Firwood', 'authors': 'Boris Bacic', 'page_count': 448, 'categories': 'Horror, Psychological Horror', 'summary': 'A teenager sent to a summer camp discovers that a recurring trial in the woods is linked to disappearances and a supernatural creature.', 'rating': 4.0, 'dna': [8, 84, 60, 8, 94, 2, 4], 'profile': [82, 96, 66, 20, 94, 80, 6, 96, 4], 'themes': ['survival', 'camp', 'supernatural'], 'atmosphere': ['summer camp', 'tense', 'dark'], 'elements': ['camp', 'forest', 'wraith']}, {'title': 'Las Posadas', 'authors': 'V. Castro', 'page_count': 41, 'categories': 'Horror, Psychological Horror', 'summary': 'A Christmas gathering in Texas turns into a supernatural horror story involving a funeral home, a mysterious stranger, and a terrifying visitor.', 'rating': 3.8, 'dna': [8, 84, 60, 8, 94, 2, 4], 'profile': [82, 96, 66, 20, 94, 80, 6, 96, 4], 'themes': ['Christmas', 'vampires', 'supernatural'], 'atmosphere': ['festive', 'gothic', 'dark'], 'elements': ['Texas', 'funeral home', 'vampire']}, {'title': 'The Wife Between Us', 'authors': 'Greer Hendricks & Sarah Pekkanen', 'page_count': 336, 'categories': 'Thriller, Mystery, Crime Fiction', 'summary': 'A complicated relationship involving an ex-wife, a new fiancée, and a seemingly perfect marriage gradually reveals a different story.', 'rating': 3.9, 'dna': [12, 30, 96, 6, 44, 4, 8], 'profile': [82, 96, 94, 10, 58, 76, 8, 96, 8], 'themes': ['marriage', 'jealousy', 'deception'], 'atmosphere': ['domestic', 'twisty', 'suspenseful'], 'elements': ['divorce', 'engagement', 'unreliable perspective']}, {'title': 'The Alienist', 'authors': 'Caleb Carr', 'page_count': 480, 'categories': 'Thriller, Mystery, Crime Fiction', 'summary': 'A psychologist and a team of investigators hunt a serial killer in nineteenth-century New York using emerging ideas about criminal behavior.', 'rating': 4.0, 'dna': [12, 30, 96, 6, 44, 4, 8], 'profile': [82, 96, 94, 10, 58, 76, 8, 96, 8], 'themes': ['serial killer', 'psychology', 'investigation'], 'atmosphere': ['historical', 'dark', 'procedural'], 'elements': ['1890s New York', 'criminal profiling', 'murder']}, {'title': 'The Poet', 'authors': 'Michael Connelly', 'page_count': 448, 'categories': 'Thriller, Mystery, Crime Fiction', 'summary': 'A journalist investigates the apparent suicide of his twin brother and discovers a pattern connecting a series of police deaths.', 'rating': 4.0, 'dna': [12, 30, 96, 6, 44, 4, 8], 'profile': [82, 96, 94, 10, 58, 76, 8, 96, 8], 'themes': ['journalism', 'murder', 'investigation'], 'atmosphere': ['dark', 'procedural', 'conspiracy'], 'elements': ['Denver', 'FBI', 'serial killer']}, {'title': 'The Black Echo', 'authors': 'Michael Connelly', 'page_count': 448, 'categories': 'Thriller, Mystery, Crime Fiction', 'summary': 'A Los Angeles detective investigating a murder uncovers links to a group of former soldiers and a dangerous bank heist.', 'rating': 4.0, 'dna': [12, 30, 96, 6, 44, 4, 8], 'profile': [82, 96, 94, 10, 58, 76, 8, 96, 8], 'themes': ['murder', 'heist', 'police'], 'atmosphere': ['noir', 'procedural', 'urban'], 'elements': ['Los Angeles', 'tunnel', 'bank robbery']}, {'title': 'The Ruin', 'authors': 'Dervla McTiernan', 'page_count': 352, 'categories': 'Thriller, Mystery, Crime Fiction', 'summary': 'A detective in rural Ireland investigates a missing student and finds connections to abuse, institutional power, and a family secret.', 'rating': 4.1, 'dna': [12, 30, 96, 6, 44, 4, 8], 'profile': [82, 96, 94, 10, 58, 76, 8, 96, 8], 'themes': ['missing person', 'family', 'justice'], 'atmosphere': ['rural', 'dark', 'investigative'], 'elements': ['Ireland', 'police detective', 'old case']}, {'title': 'The Search', 'authors': 'Nora Roberts', 'page_count': 480, 'categories': 'Thriller, Mystery, Crime Fiction', 'summary': 'A woman living in a remote coastal community helps train a rescue dog while confronting a threat tied to a serial killer from her past.', 'rating': 4.0, 'dna': [12, 30, 96, 6, 44, 4, 8], 'profile': [82, 96, 94, 10, 58, 76, 8, 96, 8], 'themes': ['survival', 'serial killer', 'healing'], 'atmosphere': ['coastal', 'romantic', 'suspenseful'], 'elements': ['rescue dogs', 'Maine', 'serial killer']}, {'title': 'The Snowman', 'authors': 'Jo Nesbø', 'page_count': 512, 'categories': 'Thriller, Mystery, Crime Fiction', 'summary': 'A detective investigating disappearances connected by mysterious snowmen begins to suspect a serial killer is watching his own life.', 'rating': 4.0, 'dna': [12, 30, 96, 6, 44, 4, 8], 'profile': [82, 96, 94, 10, 58, 76, 8, 96, 8], 'themes': ['serial killer', 'investigation', 'obsession'], 'atmosphere': ['cold', 'dark', 'police procedural'], 'elements': ['Oslo', 'snowman', 'serial killings']}, {'title': 'Needy Little Things', 'authors': 'Channelle Desamours', 'page_count': 352, 'categories': 'Thriller, Mystery, Crime Fiction', 'summary': 'A clairvoyant teenager searches for her missing friend while balancing an unusual ability with the pressures of everyday life.', 'rating': 4.0, 'dna': [12, 30, 96, 6, 44, 4, 8], 'profile': [82, 96, 94, 10, 58, 76, 8, 96, 8], 'themes': ['disappearance', 'psychic abilities', 'friendship'], 'atmosphere': ['contemporary', 'tense', 'speculative'], 'elements': ['missing girl', 'clairvoyance', 'teen investigation']}, {'title': 'Fair Play', 'authors': 'Louise Hegarty', 'page_count': 320, 'categories': 'Thriller, Mystery, Crime Fiction', 'summary': "Friends celebrating New Year's Eve at a rural Irish house find themselves investigating a death that resembles a classic murder mystery.", 'rating': 4.0, 'dna': [12, 30, 96, 6, 44, 4, 8], 'profile': [82, 96, 94, 10, 58, 76, 8, 96, 8], 'themes': ['friendship', 'murder', 'secrets'], 'atmosphere': ['cozy', 'twisty', 'isolated'], 'elements': ['Irish country house', "New Year's Eve", 'murder mystery']}, {'title': 'All the Noise at Once', 'authors': 'DeAndra Davis', 'page_count': 384, 'categories': 'Young Adult, Contemporary Fiction', 'summary': 'A teenager trying to regain his place on a football team navigates friendship, family, and how others respond to his autistic identity.', 'rating': 4.1, 'dna': [52, 20, 54, 28, 18, 8, 96], 'profile': [88, 40, 88, 56, 24, 72, 26, 96, 88], 'themes': ['identity', 'friendship', 'school'], 'atmosphere': ['contemporary', 'emotional', 'hopeful'], 'elements': ['football', 'high school', 'family']}, {'title': 'Best of All Worlds', 'authors': 'Kenneth Oppel', 'page_count': 256, 'categories': 'Young Adult, Contemporary Fiction', 'summary': 'A teenager becomes involved in a mysterious science-fiction adventure involving different versions of reality and a difficult choice about what to protect.', 'rating': 4.0, 'dna': [52, 20, 54, 28, 18, 8, 96], 'profile': [88, 40, 88, 56, 24, 72, 26, 96, 88], 'themes': ['parallel worlds', 'identity', 'family'], 'atmosphere': ['speculative', 'mysterious', 'adventurous'], 'elements': ['alternate reality', 'teenager', 'science']}, {'title': 'Cope Field', 'authors': 'T. L. Simpson', 'page_count': 272, 'categories': 'Young Adult, Contemporary Fiction', 'summary': 'A teenager faces a difficult school year while friendship, family pressure, and a changing sense of self collide.', 'rating': 4.0, 'dna': [52, 20, 54, 28, 18, 8, 96], 'profile': [88, 40, 88, 56, 24, 72, 26, 96, 88], 'themes': ['friendship', 'identity', 'school'], 'atmosphere': ['contemporary', 'intimate', 'reflective'], 'elements': ['high school', 'friendship', 'family']}, {'title': 'The Corruption of Hollis Brown', 'authors': 'K. Ancrum', 'page_count': 384, 'categories': 'Young Adult, Contemporary Fiction', 'summary': 'A teenager in a small town becomes entangled in secrets involving friendship, family, and a disturbing past.', 'rating': 4.0, 'dna': [52, 20, 54, 28, 18, 8, 96], 'profile': [88, 40, 88, 56, 24, 72, 26, 96, 88], 'themes': ['friendship', 'secrets', 'identity'], 'atmosphere': ['dark', 'contemporary', 'mysterious'], 'elements': ['small town', 'family', 'mystery']}, {'title': 'His Face Is the Sun', 'authors': 'Michelle Jabes Corpora', 'page_count': 528, 'categories': 'Young Adult, Contemporary Fiction', 'summary': 'A teenager navigating family, identity, and an unusual new relationship confronts secrets that change the way she sees herself.', 'rating': 4.0, 'dna': [52, 20, 54, 28, 18, 8, 96], 'profile': [88, 40, 88, 56, 24, 72, 26, 96, 88], 'themes': ['identity', 'family', 'love'], 'atmosphere': ['emotional', 'contemporary', 'reflective'], 'elements': ['high school', 'family secrets', 'first love']}, {'title': 'Kill Creatures', 'authors': 'Rory Power', 'page_count': 288, 'categories': 'Young Adult, Contemporary Fiction', 'summary': 'A teenager returns to a summer camp connected to a disturbing disappearance and must confront what she remembers about that night.', 'rating': 4.0, 'dna': [52, 20, 54, 28, 18, 8, 96], 'profile': [88, 40, 88, 56, 24, 72, 26, 96, 88], 'themes': ['disappearance', 'memory', 'friendship'], 'atmosphere': ['dark', 'summer', 'tense'], 'elements': ['summer camp', 'missing girl', 'memory']}, {'title': 'They Bloom at Night', 'authors': 'Trang Thanh Tran', 'page_count': 272, 'categories': 'Young Adult, Contemporary Fiction', 'summary': 'A teenager navigating a flooded city follows strange signs of life through ruined streets while confronting family and environmental change.', 'rating': 4.0, 'dna': [52, 20, 54, 28, 18, 8, 96], 'profile': [88, 40, 88, 56, 24, 72, 26, 96, 88], 'themes': ['climate', 'family', 'identity'], 'atmosphere': ['flooded', 'surreal', 'melancholic'], 'elements': ['flooded city', 'environment', 'family']}, {'title': 'Top Heavy', 'authors': 'Rhonda DeChambeau', 'page_count': 352, 'categories': 'Young Adult, Contemporary Fiction', 'summary': 'A teenager confronts assumptions about her body and identity while navigating friendship, performance, and a changing school life.', 'rating': 4.0, 'dna': [52, 20, 54, 28, 18, 8, 96], 'profile': [88, 40, 88, 56, 24, 72, 26, 96, 88], 'themes': ['body image', 'identity', 'friendship'], 'atmosphere': ['contemporary', 'emotional', 'hopeful'], 'elements': ['school', 'performance', 'friendship']}, {'title': 'Truth Is', 'authors': 'Hannah V. Sawyerr', 'page_count': 480, 'categories': 'Young Adult, Contemporary Fiction', 'summary': 'A teenager uses poetry and self-expression to make sense of family expectations, school life, and questions of truth and identity.', 'rating': 4.0, 'dna': [52, 20, 54, 28, 18, 8, 96], 'profile': [88, 40, 88, 56, 24, 72, 26, 96, 88], 'themes': ['poetry', 'identity', 'family'], 'atmosphere': ['lyrical', 'contemporary', 'intimate'], 'elements': ['poetry', 'school', 'family']}, {'title': 'Exit Party', 'authors': 'Emily St. John Mandel', 'page_count': 352, 'categories': 'Science Fiction, Speculative Fiction', 'summary': 'In a fractured near-future America, one night in Los Angeles brings together people whose choices reveal a society changing under pressure.', 'rating': 4.0, 'dna': [18, 38, 56, 96, 14, 8, 8], 'profile': [76, 94, 60, 14, 28, 98, 8, 100, 32], 'themes': ['society', 'politics', 'identity'], 'atmosphere': ['near-future', 'literary', 'atmospheric'], 'elements': ['Los Angeles', 'future America', 'party']}, {'title': 'The Bones Beneath My Skin', 'authors': 'T. J. Klune', 'page_count': 368, 'categories': 'Science Fiction, Speculative Fiction', 'summary': "A grieving man visits his family's cabin and meets a mysterious child whose existence draws danger and forces him to decide whom to protect.", 'rating': 4.1, 'dna': [18, 38, 56, 96, 14, 8, 8], 'profile': [76, 94, 60, 14, 28, 98, 8, 100, 32], 'themes': ['family', 'identity', 'survival'], 'atmosphere': ['emotional', 'mysterious', 'road-trip'], 'elements': ['Oregon', 'secret child', 'conspiracy']}, {'title': 'Exodus: The Archimedes Engine', 'authors': 'Peter F. Hamilton', 'page_count': 480, 'categories': 'Science Fiction, Speculative Fiction', 'summary': 'A young man escapes a settled interstellar civilization to join an ark ship and search for a better future for humanity.', 'rating': 4.0, 'dna': [18, 38, 56, 96, 14, 8, 8], 'profile': [76, 94, 60, 14, 28, 98, 8, 100, 32], 'themes': ['freedom', 'empire', 'space travel'], 'atmosphere': ['epic', 'adventurous', 'futuristic'], 'elements': ['interstellar colony', 'ark ship', 'space travel']}, {'title': 'World Walkers', 'authors': 'Neal Asher', 'page_count': 448, 'categories': 'Science Fiction, Speculative Fiction', 'summary': 'A mutant able to cross alternate worlds sees a terrifying possible future and turns against a totalitarian power controlling the multiverse.', 'rating': 4.0, 'dna': [18, 38, 56, 96, 14, 8, 8], 'profile': [76, 94, 60, 14, 28, 98, 8, 100, 32], 'themes': ['multiverse', 'rebellion', 'power'], 'atmosphere': ['futuristic', 'action', 'political'], 'elements': ['alternate worlds', 'mutant', 'totalitarian regime']}, {'title': 'Leech', 'authors': 'Hiron Ennes', 'page_count': 288, 'categories': 'Science Fiction, Speculative Fiction', 'summary': 'A physician sent to replace a dead doctor in an isolated chateau discovers that the medical institute inhabiting the region may not be what it claims to be.', 'rating': 4.0, 'dna': [18, 38, 56, 96, 14, 8, 8], 'profile': [76, 94, 60, 14, 28, 98, 8, 100, 32], 'themes': ['identity', 'infection', 'control'], 'atmosphere': ['gothic', 'isolated', 'uncanny'], 'elements': ['chateau', 'parasite', 'future society']}, {'title': "Moss'd In Space", 'authors': 'Rebecca Thorne', 'page_count': 352, 'categories': 'Science Fiction, Speculative Fiction', 'summary': 'A pilot searching for a new home discovers that the moss covering an abandoned spaceship is actually a sentient organic computer.', 'rating': 4.0, 'dna': [18, 38, 56, 96, 14, 8, 8], 'profile': [76, 94, 60, 14, 28, 98, 8, 100, 32], 'themes': ['AI', 'found family', 'space travel'], 'atmosphere': ['cozy', 'futuristic', 'warm'], 'elements': ['spaceship', 'organic computer', 'found family']}, {'title': 'Sublimation', 'authors': 'Isabel J. Kim', 'page_count': 368, 'categories': 'Science Fiction, Speculative Fiction', 'summary': 'A woman returning to Korea for a funeral encounters another version of herself whose life diverged after migration.', 'rating': 4.0, 'dna': [18, 38, 56, 96, 14, 8, 8], 'profile': [76, 94, 60, 14, 28, 98, 8, 100, 32], 'themes': ['identity', 'migration', 'memory'], 'atmosphere': ['intellectual', 'melancholic', 'speculative'], 'elements': ['parallel selves', 'Korea', 'New York']}, {'title': 'Children of Strife', 'authors': 'Adrian Tchaikovsky', 'page_count': 480, 'categories': 'Science Fiction, Speculative Fiction', 'summary': 'A scientist searching for missing crew members enters a transformed planet where old experiments created unexpected forms of life.', 'rating': 4.0, 'dna': [18, 38, 56, 96, 14, 8, 8], 'profile': [76, 94, 60, 14, 28, 98, 8, 100, 32], 'themes': ['exploration', 'evolution', 'survival'], 'atmosphere': ['alien', 'scientific', 'tense'], 'elements': ['terraforming', 'alien life', 'lost expedition']}, {'title': 'Shroud', 'authors': 'Adrian Tchaikovsky', 'page_count': 400, 'categories': 'Science Fiction, Speculative Fiction', 'summary': 'A commercial mission to a hostile moon becomes a survival story after an accident leaves two explorers on a world where human life should be impossible.', 'rating': 4.0, 'dna': [18, 38, 56, 96, 14, 8, 8], 'profile': [76, 94, 60, 14, 28, 98, 8, 100, 32], 'themes': ['survival', 'exploration', 'corporate power'], 'atmosphere': ['alien', 'claustrophobic', 'adventurous'], 'elements': ['high-gravity moon', 'exploration mission', 'corporate exploitation']}, {'title': 'Out of the Woods', 'authors': 'Hannah Bonam-Young', 'page_count': 368, 'categories': 'Romance, Contemporary Romance', 'summary': 'A long-married couple joins a wilderness retreat to reconnect with each other while confronting grief and changing expectations.', 'rating': 4.1, 'dna': [96, 12, 64, 10, 2, 2, 16], 'profile': [88, 10, 96, 68, 6, 40, 30, 88, 94], 'themes': ['marriage', 'grief', 'second chances'], 'atmosphere': ['warm', 'reflective', 'romantic'], 'elements': ['hiking retreat', 'marriage', 'wilderness']}, {'title': 'I Think They Love You', 'authors': 'Julian Winters', 'page_count': 336, 'categories': 'Romance, Contemporary Romance', 'summary': "A man enters a fake relationship with the ex who broke his heart while competing to take over his family's event-planning company.", 'rating': 4.1, 'dna': [96, 12, 64, 10, 2, 2, 16], 'profile': [88, 10, 96, 68, 6, 40, 30, 88, 94], 'themes': ['fake dating', 'second chances', 'career'], 'atmosphere': ['funny', 'romantic', 'contemporary'], 'elements': ['Atlanta', 'event planning', 'exes']}, {'title': 'Deep End', 'authors': 'Ali Hazelwood', 'page_count': 432, 'categories': 'Romance, Contemporary Romance', 'summary': 'A Stanford diver enters a casual arrangement with a fellow athlete and discovers that attraction can become something far more serious.', 'rating': 4.0, 'dna': [96, 12, 64, 10, 2, 2, 16], 'profile': [88, 10, 96, 68, 6, 40, 30, 88, 94], 'themes': ['sports', 'love', 'healing'], 'atmosphere': ['steamy', 'romantic', 'contemporary'], 'elements': ['swimming', 'Stanford', 'student athletes']}, {'title': 'A Tropical Rebel Gets the Duke', 'authors': 'Adriana Herrera', 'page_count': 368, 'categories': 'Romance, Contemporary Romance', 'summary': "A doctor running a secret women's clinic in nineteenth-century Paris becomes involved with a duke who needs a wife for appearances.", 'rating': 4.0, 'dna': [96, 12, 64, 10, 2, 2, 16], 'profile': [88, 10, 96, 68, 6, 40, 30, 88, 94], 'themes': ['class', 'independence', 'love'], 'atmosphere': ['historical', 'romantic', 'political'], 'elements': ['1880s Paris', 'doctor', 'duke']}, {'title': 'First-Time Caller', 'authors': 'B. K. Borison', 'page_count': 352, 'categories': 'Romance, Contemporary Romance', 'summary': 'A radio host and a single mother grow closer after her daughter calls his show hoping to help her find love.', 'rating': 4.0, 'dna': [96, 12, 64, 10, 2, 2, 16], 'profile': [88, 10, 96, 68, 6, 40, 30, 88, 94], 'themes': ['single parent', 'radio', 'love'], 'atmosphere': ['warm', 'funny', 'romantic'], 'elements': ['radio show', 'single mother', 'romance']}, {'title': 'Promise Me Sunshine', 'authors': 'Cara Bastone', 'page_count': 368, 'categories': 'Romance, Contemporary Romance', 'summary': 'A young woman grieving her best friend follows a list meant to help her live again and finds unexpected love along the way.', 'rating': 4.1, 'dna': [96, 12, 64, 10, 2, 2, 16], 'profile': [88, 10, 96, 68, 6, 40, 30, 88, 94], 'themes': ['grief', 'friendship', 'love'], 'atmosphere': ['emotional', 'warm', 'slow-burn'], 'elements': ['Brooklyn', 'babysitting', 'grief journey']}, {'title': 'Summer in the City', 'authors': 'Alex Aster', 'page_count': 368, 'categories': 'Romance, Contemporary Romance', 'summary': 'A screenwriter returns to New York to finish a screenplay and discovers that her next-door rival may become the center of her summer.', 'rating': 4.0, 'dna': [96, 12, 64, 10, 2, 2, 16], 'profile': [88, 10, 96, 68, 6, 40, 30, 88, 94], 'themes': ['rivals', 'writing', 'love'], 'atmosphere': ['urban', 'playful', 'romantic'], 'elements': ['New York', 'screenwriter', 'neighbors']}, {'title': 'Flirting Lessons', 'authors': 'Jasmine Guillory', 'page_count': 320, 'categories': 'Romance, Contemporary Romance', 'summary': 'A woman who has little experience with dating learns to take romantic risks while building a connection with someone who challenges her expectations.', 'rating': 4.0, 'dna': [96, 12, 64, 10, 2, 2, 16], 'profile': [88, 10, 96, 68, 6, 40, 30, 88, 94], 'themes': ['dating', 'confidence', 'love'], 'atmosphere': ['warm', 'funny', 'romantic'], 'elements': ['dating lessons', 'city', 'friendship']}, {'title': "Can't Help Faking in Love", 'authors': 'Swati Hegde', 'page_count': 336, 'categories': 'Romance, Contemporary Romance', 'summary': 'A successful woman hires a local barista to pose as her date for a family wedding, but their fake relationship begins feeling real.', 'rating': 4.0, 'dna': [96, 12, 64, 10, 2, 2, 16], 'profile': [88, 10, 96, 68, 6, 40, 30, 88, 94], 'themes': ['fake dating', 'family', 'love'], 'atmosphere': ['funny', 'romantic', 'warm'], 'elements': ['wedding', 'barista', 'fake relationship']}, {'title': 'The Power of Regret', 'authors': 'Daniel H. Pink', 'page_count': 288, 'categories': 'Personal Development, Nonfiction, Psychology', 'summary': 'An exploration of regret examines what people can learn from past decisions and how reflection can support better future choices.', 'rating': 4.0, 'dna': [2, 6, 18, 4, 2, 96, 12], 'profile': [74, 8, 88, 12, 4, 96, 28, 98, 72], 'themes': ['regret', 'decision-making', 'growth'], 'atmosphere': ['reflective', 'evidence-based', 'thought-provoking'], 'elements': ['regret', 'behavior', 'personal change']}, {'title': 'The Confidence Gap', 'authors': 'Russ Harris', 'page_count': 224, 'categories': 'Personal Development, Nonfiction, Psychology', 'summary': 'An acceptance-based approach explains how people can act on their values even when fear and self-doubt are present.', 'rating': 4.1, 'dna': [2, 6, 18, 4, 2, 96, 12], 'profile': [74, 8, 88, 12, 4, 96, 28, 98, 72], 'themes': ['confidence', 'fear', 'values'], 'atmosphere': ['practical', 'psychological', 'encouraging'], 'elements': ['self-doubt', 'ACT', 'values']}, {'title': 'The Upside of Stress', 'authors': 'Kelly McGonigal', 'page_count': 288, 'categories': 'Personal Development, Nonfiction, Psychology', 'summary': 'A science-informed look at stress argues that beliefs about stress can influence how people experience and respond to challenging situations.', 'rating': 4.1, 'dna': [2, 6, 18, 4, 2, 96, 12], 'profile': [74, 8, 88, 12, 4, 96, 28, 98, 72], 'themes': ['stress', 'resilience', 'mindset'], 'atmosphere': ['scientific', 'accessible', 'practical'], 'elements': ['stress response', 'mindset', 'behavior']}, {'title': 'The How of Happiness', 'authors': 'Sonja Lyubomirsky', 'page_count': 384, 'categories': 'Personal Development, Nonfiction, Psychology', 'summary': 'A research-based guide explores activities and habits that can influence well-being and discusses what people can realistically change.', 'rating': 4.0, 'dna': [2, 6, 18, 4, 2, 96, 12], 'profile': [74, 8, 88, 12, 4, 96, 28, 98, 72], 'themes': ['happiness', 'habits', 'well-being'], 'atmosphere': ['evidence-based', 'practical', 'reflective'], 'elements': ['happiness research', 'habits', 'well-being']}, {'title': 'The E-Myth Revisited', 'authors': 'Michael E. Gerber', 'page_count': 268, 'categories': 'Personal Development, Nonfiction, Psychology', 'summary': 'A practical examination of why small businesses struggle and how systems, roles, and repeatable processes can make work more sustainable.', 'rating': 4.1, 'dna': [2, 6, 18, 4, 2, 96, 12], 'profile': [74, 8, 88, 12, 4, 96, 28, 98, 72], 'themes': ['business', 'systems', 'work'], 'atmosphere': ['practical', 'structured', 'entrepreneurial'], 'elements': ['small business', 'systems', 'processes']}, {'title': 'The Compound Effect', 'authors': 'Darren Hardy', 'page_count': 192, 'categories': 'Personal Development, Nonfiction, Psychology', 'summary': 'A motivational framework explains how small repeated actions can accumulate into major long-term changes.', 'rating': 4.0, 'dna': [2, 6, 18, 4, 2, 96, 12], 'profile': [74, 8, 88, 12, 4, 96, 28, 98, 72], 'themes': ['habits', 'consistency', 'goals'], 'atmosphere': ['motivational', 'practical', 'structured'], 'elements': ['habits', 'goals', 'daily actions']}, {'title': 'Eat That Frog!', 'authors': 'Brian Tracy', 'page_count': 128, 'categories': 'Personal Development, Nonfiction, Psychology', 'summary': 'A concise productivity guide recommends prioritizing the most important task and building routines around focused execution.', 'rating': 4.0, 'dna': [2, 6, 18, 4, 2, 96, 12], 'profile': [74, 8, 88, 12, 4, 96, 28, 98, 72], 'themes': ['productivity', 'focus', 'priorities'], 'atmosphere': ['practical', 'concise', 'motivational'], 'elements': ['prioritization', 'tasks', 'time management']}, {'title': 'The Four Agreements', 'authors': 'Don Miguel Ruiz', 'page_count': 160, 'categories': 'Personal Development, Nonfiction, Psychology', 'summary': 'A short philosophical guide proposes four principles centered on communication, assumptions, integrity, and personal responsibility.', 'rating': 4.1, 'dna': [2, 6, 18, 4, 2, 96, 12], 'profile': [74, 8, 88, 12, 4, 96, 28, 98, 72], 'themes': ['responsibility', 'communication', 'self-awareness'], 'atmosphere': ['reflective', 'spiritual', 'concise'], 'elements': ['personal agreements', 'Toltec philosophy', 'relationships']}, {'title': 'Maybe You Should Talk to Someone', 'authors': 'Lori Gottlieb', 'page_count': 415, 'categories': 'Personal Development, Nonfiction, Psychology', 'summary': 'A therapist describes several patients and her own therapy experience to explore relationships, change, grief, and self-understanding.', 'rating': 4.4, 'dna': [2, 6, 18, 4, 2, 96, 12], 'profile': [74, 8, 88, 12, 4, 96, 28, 98, 72], 'themes': ['therapy', 'relationships', 'change'], 'atmosphere': ['warm', 'empathetic', 'reflective'], 'elements': ['therapy', 'patients', 'self-discovery']}]
 
-BOOKS = [
-    {
-        "title": "The Metamorphosis",
-        "author": "Franz Kafka",
-    },
-    {
-        "title": "Animal Farm",
-        "author": "George Orwell",
-    },
-    {
-        "title": "The Little Prince",
-        "author": "Antoine de Saint-Exupery",
-    },
-    {
-        "title": "Coraline",
-        "author": "Neil Gaiman",
-    },
-    {
-        "title": "The Outsiders",
-        "author": "S. E. Hinton",
-    },
-    {
-        "title": "Wuthering Heights",
-        "author": "Emily Bronte",
-    },
-    {
-        "title": "The Great Gatsby",
-        "author": "F. Scott Fitzgerald",
-    },
-    {
-        "title": "The Picture of Dorian Gray",
-        "author": "Oscar Wilde",
-    },
-    {
-        "title": "Pride and Prejudice",
-        "author": "Jane Austen",
-    },
-    {
-        "title": "The Hunger Games",
-        "author": "Suzanne Collins",
-    },
-    {
-        "title": "The Haunting of Hill House",
-        "author": "Shirley Jackson",
-    },
-    {
-        "title": "The Hobbit",
-        "author": "J. R. R. Tolkien",
-    },
-    {
-        "title": "Dune",
-        "author": "Frank Herbert",
-    },
-    {
-        "title": "The Fellowship of the Ring",
-        "author": "J. R. R. Tolkien",
-    },
+
+DNA_KEYS = [
+    "romance",
+    "fantasy_romantasy",
+    "thriller_mystery_crime",
+    "science_fiction",
+    "horror",
+    "personal_development_nonfiction",
+    "young_adult",
+]
+
+PROFILE_KEYS = [
+    "emotional",
+    "mysterious",
+    "easy_to_read",
+    "tearjerker",
+    "dark",
+    "intellectually_challenging",
+    "relaxing",
+    "thought_provoking",
+    "wholesome",
 ]
 
 
-# ============================================================
-# SEED
-# ============================================================
+def normalize_title(title: str) -> str:
+    import re
+    import unicodedata
 
-def seed_books():
-    """
-    Popula o banco com os livros definidos em BOOKS.
+    normalized = unicodedata.normalize(
+        "NFKD",
+        title,
+    )
 
-    A responsabilidade de:
-    - procurar primeiro no banco;
-    - consultar Google Books;
-    - selecionar o melhor resultado;
-    - usar Open Library como fallback;
-    - gerar Book DNA / Reading Profile;
-    - evitar duplicatas;
+    normalized = "".join(
+        char
+        for char in normalized
+        if not unicodedata.combining(char)
+    )
 
-    fica nos serviços e repository.
-    """
+    normalized = normalized.lower()
 
+    normalized = re.sub(
+        r"[^\w\s]",
+        " ",
+        normalized,
+    )
+
+    normalized = re.sub(
+        r"\s+",
+        " ",
+        normalized,
+    )
+
+    return normalized.strip()
+
+
+def build_book(data: dict) -> Book:
+    book_dna = dict(
+        zip(
+            DNA_KEYS,
+            data["dna"],
+        )
+    )
+
+    reading_profile = dict(
+        zip(
+            PROFILE_KEYS,
+            data["profile"],
+        )
+    )
+
+    reading_profile["short_book"] = (
+        100
+        if data["page_count"] < 200
+        else 0
+    )
+
+    return Book(
+        title=data["title"],
+        authors=data["authors"],
+        publisher=None,
+        page_count=data["page_count"],
+        published_year=None,
+        language="en",
+        categories=data["categories"],
+        description=data["summary"],
+        preview_link="https://books.google.com/",
+        google_rating=data["rating"],
+        ratings_count=10000,
+        thumbnail=None,
+        ai_summary=data["summary"],
+        book_dna=book_dna,
+        reading_profile=reading_profile,
+        themes=data["themes"],
+        atmosphere=data["atmosphere"],
+        story_elements=data["elements"],
+        source="Seed",
+    )
+
+
+def seed_books() -> None:
     db = SessionLocal()
 
+    inserted = 0
+    skipped = 0
+
     try:
-        print("\n🌱 Iniciando seed dos livros...\n")
+        print("\n🌱 Starting BookMind mixed genre seed...\n")
 
-        for book_data in BOOKS:
+        existing_books = db.query(Book).all()
 
-            title = book_data["title"]
-            author = book_data["author"]
+        existing_titles = {
+            normalize_title(book.title)
+            for book in existing_books
+            if book.title
+        }
 
-            print(
-                f"📚 {title} — {author}"
+        for data in BOOKS:
+            normalized_title = normalize_title(
+                data["title"]
             )
 
-            try:
-                book = search_books(
-                    title=title,
-                    author=author,
-                    db=db,
-                )
-
-                if not book:
-                    print(
-                        "   ❌ Livro não encontrado."
-                    )
-                    print()
-                    continue
-
+            if normalized_title in existing_titles:
                 print(
-                    f"   ✓ Livro encontrado: "
-                    f"{book.title} — "
-                    f"{', '.join(book.authors)}"
+                    f"⏭️ Already exists: "
+                    f"{data['title']}"
                 )
+                skipped += 1
+                continue
 
-                if book.page_count:
-                    print(
-                        f"   📖 Páginas: "
-                        f"{book.page_count}"
-                    )
-                else:
-                    print(
-                        "   📖 Páginas: Não informado"
-                    )
+            db.add(build_book(data))
 
-                print(
-                    "   🧬 Book DNA: "
-                    + (
-                        "✓"
-                        if book.book_dna
-                        else "✗"
-                    )
-                )
+            existing_titles.add(
+                normalized_title
+            )
 
-                print(
-                    "   🎭 Reading Profile: "
-                    + (
-                        "✓"
-                        if book.reading_profile
-                        else "✗"
-                    )
-                )
+            inserted += 1
 
-            except Exception as error:
-                print(
-                    f"   ❌ Erro ao processar livro: "
-                    f"{error}"
-                )
+            print(
+                f"✅ Added: "
+                f"{data['title']} "
+                f"({data['page_count']} pages)"
+            )
 
-            print()
+        db.commit()
 
-        print("🌱 Seed finalizada!")
+        print("\n" + "=" * 60)
+        print("🌱 MIXED GENRE SEED COMPLETE")
+        print("=" * 60)
+        print(f"📚 Inserted: {inserted}")
+        print(f"⏭️ Skipped: {skipped}")
+        print(f"📦 Books in this seed: {len(BOOKS)}")
+        print("=" * 60)
+
+    except Exception as exc:
+        db.rollback()
+        print(
+            f"\n❌ Seed failed: {exc}"
+        )
+        raise
 
     finally:
         db.close()
 
-
-# ============================================================
-# EXECUÇÃO
-# ============================================================
 
 if __name__ == "__main__":
     seed_books()
