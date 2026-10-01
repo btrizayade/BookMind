@@ -150,7 +150,7 @@ def register(
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Email already registered.",
+            detail="Unable to create account. Please check your information and try again.",
         )
 
     password_hash = hash_password(
@@ -170,7 +170,7 @@ def register(
 
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Email already registered.",
+            detail="Unable to create account. Please check your information and try again.",
         )
 
     return {
