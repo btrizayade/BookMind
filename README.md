@@ -1,7 +1,7 @@
  <escape char="\\"> </escape>
 <div align="center">
 
-<img width="600" height="600" alt="BookMind Logo" src="https://github.com/user-attachments/assets/18e2e6c6-06ab-40a4-8c3e-f868f6198599" />
+<img width="500" height="500" alt="BookMind Logo" src="https://github.com/user-attachments/assets/18e2e6c6-06ab-40a4-8c3e-f868f6198599" />
 
 # 📚 BookMind
 
@@ -23,13 +23,13 @@ By combining literary analysis, structured book data, and a personalized recomme
 
 <p align="center">
 
-<img width="600" height="500" alt="Captura de tela 2026-10-02 163159" src="https://github.com/user-attachments/assets/88a2693f-50d7-4eda-a65b-a010cf3cafd3" />
+<img width="500" height="500" alt="Captura de tela 2026-10-02 163159" src="https://github.com/user-attachments/assets/88a2693f-50d7-4eda-a65b-a010cf3cafd3" />
 
-<img width="600" height="500" alt="Captura de tela 2026-10-02 164210" src="https://github.com/user-attachments/assets/d5f7db56-58d2-40fc-abdc-7429cd21fc7b" />
+<img width="500" height="500" alt="Captura de tela 2026-10-02 164210" src="https://github.com/user-attachments/assets/d5f7db56-58d2-40fc-abdc-7429cd21fc7b" />
 
-<img width="600" height="500" alt="Captura de tela 2026-09-15 232727" src="https://github.com/user-attachments/assets/7697b7c9-ca46-41b8-bec3-92043df66d55" />
+<img width="500" height="500" alt="Captura de tela 2026-09-15 232727" src="https://github.com/user-attachments/assets/7697b7c9-ca46-41b8-bec3-92043df66d55" />
 
-<img width="600" height="500" alt="Captura de tela 2026-10-02 163428" src="https://github.com/user-attachments/assets/5c18660a-c8b9-4ecb-96fe-4c68881ef74f" />
+<img width="500" height="500" alt="Captura de tela 2026-10-02 163428" src="https://github.com/user-attachments/assets/5c18660a-c8b9-4ecb-96fe-4c68881ef74f" />
 
 
 </p>
