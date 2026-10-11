@@ -1,16 +1,19 @@
+ <escape char="\\"> </escape>
 <div align="center">
 
-<img width="1254" height="1254" alt="LOGO" src="https://github.com/user-attachments/assets/18e2e6c6-06ab-40a4-8c3e-f868f6198599" />
+<img width="1254" height="1254" alt="BookMind Logo" src="https://github.com/user-attachments/assets/18e2e6c6-06ab-40a4-8c3e-f868f6198599" />
 
 # 📚 BookMind
 
-### Discover books. Powered by AI.
+### Discover books. Find your next favorite.
 
-BookMind is an AI-powered book discovery application that helps users search for books, explore detailed information, generate AI summaries, and discover their next read through a visual and interactive experience.
+BookMind is an AI-powered book discovery platform that helps readers find books that match their interests, reading preferences, and current mood.
 
-🌐 **Live Demo:** https://book-mind-ashy.vercel.app/
+By combining literary analysis, structured book data, and a personalized recommendation engine, BookMind goes beyond traditional book searches to help readers discover what to read next.
 
-⭐ If you enjoyed this project, consider giving it a star!
+🌐 **Live Demo:** [book-mind-ashy.vercel.app](https://book-mind-ashy.vercel.app/)
+
+⭐ If you enjoy this project, consider giving it a star!
 
 </div>
 
@@ -26,221 +29,268 @@ BookMind is an AI-powered book discovery application that helps users search for
 
 ---
 
-# 🚀 Features
+## 🚀 Features
 
-- 📚 Search for books using the Google Books API
-- 📖 View detailed book information, including authors, categories, ratings, and preview links
-- 🤖 Generate AI-powered book summaries using Google Gemini
-- 💾 Cache book data and generated summaries in PostgreSQL
-- 🔐 User registration and login
-- 👤 Authenticated user sessions
-- 🚪 Secure logout
-- 🔎 Find your next book through the **Find My Next Book** feature
-- ⚡ FastAPI REST API
-- 🎨 Interactive React interface with a book-inspired visual design
-- ☁️ Deployed online with Vercel and Render
+### 📚 Book Discovery
+- Search for books using Google Books and Open Library.
+- Explore book details, including authors, covers, descriptions, categories, ratings, and preview links.
+- Retrieve and organize book metadata from external sources.
+
+### 🤖 AI-Powered Literary Analysis
+- Generate AI-powered book summaries using Google Gemini.
+- Analyze genre characteristics through **Book DNA**.
+- Evaluate reading experiences through **Reading Profile**.
+- Identify themes, atmosphere, and story elements to enrich book information.
+- Generate personalized explanations for book recommendations.
+
+### 🎯 Personalized Recommendations
+- Discover books based on selected genres and reading preferences.
+- Find books that match a desired mood or reading experience.
+- Filter recommendations by page count.
+- Rank books using a weighted compatibility score.
+- Receive personalized explanations of why each recommendation matches your preferences.
+
+### 🔐 Authentication and Security
+- User registration and login.
+- Password hashing with Argon2-based password hashing support.
+- JWT-based authentication using secure cookies.
+- CSRF protection for state-changing requests.
+- Authenticated sessions and logout.
+
+### ⚡ Backend and Data Management
+- FastAPI REST API.
+- PostgreSQL database hosted on Neon.
+- SQLAlchemy for database access.
+- Alembic for database migrations.
+- Persistent storage of book metadata, AI summaries, and literary analysis.
+
+### 🎨 User Experience
+- Interactive React interface.
+- Book-inspired visual design.
+- Integrated authentication experience.
+- Responsive layout for different screen sizes.
 
 ---
 
-# 🛠 Tech Stack
+## 🛠 Tech Stack
 
-## Frontend
+### Frontend
 
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 
----
-
-## Backend
+### Backend
 
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=FastAPI&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
 ![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-D71F00?style=for-the-badge&logo=sqlalchemy&logoColor=white)
 ![Alembic](https://img.shields.io/badge/Alembic-000000?style=for-the-badge)
 
----
-
-## Database
+### Database
 
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Neon](https://img.shields.io/badge/Neon-00E599?style=for-the-badge&logo=neon&logoColor=black)
 
----
-
-## APIs & AI
+### APIs and AI
 
 ![Google Books](https://img.shields.io/badge/Google_Books-4285F4?style=for-the-badge&logo=google&logoColor=white)
+![Open Library](https://img.shields.io/badge/Open_Library-6F9975?style=for-the-badge)
 ![Google Gemini](https://img.shields.io/badge/Google_Gemini-8E75FF?style=for-the-badge&logo=google-gemini&logoColor=white)
 
----
-
-## Deployment
+### Deployment
 
 ![Render](https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=black)
 ![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
 
 ---
 
-# 🏗 Architecture
+## 🏗 Architecture
 
 ```text
-                         React + Vite
+                       React + TypeScript
                               │
                               ▼
-                      FastAPI Backend
+                        FastAPI REST API
                               │
-              ┌───────────────┼───────────────┐
-              ▼               ▼               ▼
-      Google Books API    Gemini API      Authentication
-              │               │               │
-              └───────────────┼───────────────┘
+               ┌──────────────┼──────────────┐
+               │              │              │
+               ▼              ▼              ▼
+         Book Services    Gemini AI    Authentication
+               │              │              │
+        ┌──────┴──────┐       │              │
+        ▼             ▼       │              ▼
+ Google Books    Open Library │         JWT + Cookies
+        │             │       │              │
+        └──────┬──────┘       │              │
+               └──────────────┴──────────────┘
+                              │
                               ▼
                        PostgreSQL (Neon)
 ```
 
-The frontend communicates with the FastAPI backend, which integrates external book and AI services and stores cached data in PostgreSQL.
+The frontend communicates with the FastAPI backend, which coordinates book discovery, literary analysis, recommendation scoring, and authentication.
 
-Authentication is handled by the backend using secure cookies and CSRF protection.
-
----
-
-# 🔐 Authentication
-
-BookMind includes an authentication system that allows users to:
-
-- Create an account
-- Log in securely
-- Maintain an authenticated session
-- See their name in the application after login
-- Log out securely
-
-The authentication flow is integrated into the main BookMind interface rather than existing as a completely separate application.
+Book information and analysis are persisted in PostgreSQL so previously processed books can be reused without unnecessarily repeating external requests.
 
 ---
 
-# 📚 How BookMind Works
+## 🧬 The Recommendation Engine
+
+One of BookMind's main features is its recommendation engine, which evaluates more than a book's conventional genre classification.
+
+### Book DNA
+
+Book DNA represents how strongly a book fits different genre categories. Each category receives a score from 0 to 100, allowing the recommendation engine to evaluate genre compatibility instead of relying exclusively on broad external classifications.
+
+Current categories include:
+
+- Romance
+- Fantasy and romantasy
+- Thriller, mystery, and crime
+- Science fiction
+- Horror
+- Personal development and nonfiction
+- Young adult
+
+### Reading Profile
+
+Reading Profile describes the experience a reader might have with a book. It evaluates characteristics such as:
+
+- Emotional intensity
+- Mystery and suspense
+- Reading accessibility
+- Tearjerker potential
+- Dark atmosphere
+- Intellectual challenge
+- Relaxing qualities
+- Thought-provoking themes
+- Wholesome qualities
+
+BookMind also derives a short-book preference from the book's page count.
+
+### Compatibility Scoring
+
+Recommendations are ranked using a weighted compatibility score:
+
+| Component | Weight |
+|---|---:|
+| Genre compatibility | 40% |
+| Reading preference compatibility | 35% |
+| Mood compatibility | 25% |
+
+The selected page range is used as a filtering criterion. After the initial ranking, BookMind can use Gemini to generate concise, personalized explanations for the recommended books, based on the reader's preferences and the available literary analysis.
+
+This approach combines deterministic scoring with AI-generated explanations, making recommendations more specific than a simple genre-based search.
+
+---
+
+## 📖 How BookMind Works
 
 ### 1. Search for a book
 
-Users can search for a book directly from the BookMind interface.
+Users search for a title through the BookMind interface. The backend retrieves available metadata from Google Books and Open Library.
 
 ### 2. Explore the book
 
-BookMind retrieves information such as:
+BookMind presents information such as the title, author, cover, description, categories, ratings, and preview links.
 
-- Title
-- Author
-- Cover
-- Description
-- Categories
-- Ratings
-- Preview links
+### 3. Analyze the book
 
-### 3. Generate an AI summary
+Google Gemini can generate a summary and analyze the book's genre characteristics, reading profile, themes, atmosphere, and story elements.
 
-Google Gemini generates an AI-powered summary of the selected book.
+### 4. Find your next book
 
-The summary is displayed directly inside the BookMind book interface.
+Users select their preferred genres, desired reading experience, mood, and page range. BookMind evaluates eligible books and ranks them according to the compatibility scoring system.
 
-### 4. Cache the result
+### 5. Understand the recommendations
 
-Book information and generated summaries are stored in PostgreSQL, allowing previously processed books to be retrieved without unnecessarily repeating external requests.
+Personalized explanations highlight the characteristics that make each recommended book relevant to the user's preferences.
 
-### 5. Find your next book
+### 6. Reuse stored data
 
-The **Find My Next Book** feature provides another way to discover books beyond directly searching for a title.
+Book metadata and literary analysis are stored in PostgreSQL, allowing previously processed books to be retrieved without unnecessarily repeating the same work.
 
 ---
 
-# ⚙️ Running Locally
+## 🔐 Authentication
 
-## Clone the repository
+BookMind includes a backend authentication system integrated with the main application.
 
-```bash
-git clone https://github.com/btrizayade/BookMind.git
-cd BookMind
-```
+The authentication flow includes:
 
-## Backend
+- Account registration and login.
+- Password hashing rather than storing passwords in plaintext.
+- JWT access tokens stored in `HttpOnly` cookies.
+- CSRF protection for state-changing requests.
+- User session validation and logout.
 
-Create a virtual environment:
-
-```bash
-python -m venv .venv
-```
-
-Install the dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Start the FastAPI server:
-
-```bash
-uvicorn app.main:app --reload
-```
-
-## Frontend
-
-Open another terminal:
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
+The access token is not directly accessible to frontend JavaScript, reducing its exposure to certain client-side attacks. Security also depends on correct cookie configuration, token validation, and deployment settings.
 
 ---
 
-# 📂 Project Structure
+## ☁️ Deployment
+
+BookMind's frontend and backend are deployed separately:
+
+- **Frontend:** Vercel
+- **Backend:** Render
+- **Database:** PostgreSQL hosted on Neon
+
+Deployment requires the appropriate environment variables to be configured in each hosting service. Production authentication also depends on the frontend and backend origins, cookie settings, CSRF handling, and CORS configuration being consistent.
+
+---
+
+## 📂 Project Structure
 
 ```text
-BookMind
+BookMind/
 │
-├── app
-│   ├── database
-│   ├── models
-│   ├── repositories
-│   ├── routes
-│   ├── schemas
-│   └── services
+├── app/
+│   ├── database/
+│   ├── models/
+│   ├── repositories/
+│   ├── routes/
+│   ├── schemas/
+│   ├── security/
+│   ├── seed/
+│   └── services/
 │
-├── frontend
-│   ├── src
-│   │   ├── assets
-│   │   ├── components
-│   │   ├── pages
-│   │   └── services
-│   └── ...
+├── frontend/
+│   └── src/
+│       ├── assets/
+│       ├── components/
+│       ├── pages/
+│       └── services/
 │
+├── alembic/
+├── alembic.ini
 ├── requirements.txt
 └── ...
 ```
 
 ---
 
-# 🔮 Future Improvements
+## 🔮 Future Improvements
 
-- ⭐ Favorites
-- 💭 Should I Read It?
-- 🧬 Book DNA
-- 📚 Personal library
-- 🎯 More personalized recommendations
+- ⭐ Book favorites and personal reading lists.
+- 📚 A personal library with reading status tracking.
+- 💭 A **Should I Read It?** feature for evaluating a specific book against a reader's preferences.
+- ✉️ Automated personalized reading digests.
+- 🎯 Further improvements to recommendation quality and preference evaluation.
 
 ---
 
-# 🤝 Contributing
+## 🤝 Contributing
 
-Contributions are welcome!
+Contributions and suggestions are welcome!
 
-If you have ideas to improve BookMind, feel free to open an issue or submit a pull request.
+Feel free to open an issue to report a problem, suggest a feature, or discuss potential improvements. Pull requests are also welcome.
 
 ---
 
 <div align="center">
 
-Made with a lot of ❤️ for books
+Made with a lot of ❤️ for books.
 
 </div>
