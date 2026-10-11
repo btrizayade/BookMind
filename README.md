@@ -1,7 +1,7 @@
  <escape char="\\"> </escape>
 <div align="center">
 
-<img width="1254" height="1254" alt="BookMind Logo" src="https://github.com/user-attachments/assets/18e2e6c6-06ab-40a4-8c3e-f868f6198599" />
+<img width="600" height="600" alt="BookMind Logo" src="https://github.com/user-attachments/assets/18e2e6c6-06ab-40a4-8c3e-f868f6198599" />
 
 # 📚 BookMind
 
@@ -23,7 +23,14 @@ By combining literary analysis, structured book data, and a personalized recomme
 
 <p align="center">
 
-<img width="1877" height="886" alt="BookMind Preview" src="https://github.com/user-attachments/assets/2912995a-25d8-4abb-86df-cc03ac5675b6" />
+<img width="600" height="500" alt="Captura de tela 2026-10-02 163159" src="https://github.com/user-attachments/assets/88a2693f-50d7-4eda-a65b-a010cf3cafd3" />
+
+<img width="600" height="500" alt="Captura de tela 2026-10-02 164210" src="https://github.com/user-attachments/assets/d5f7db56-58d2-40fc-abdc-7429cd21fc7b" />
+
+<img width="600" height="500" alt="Captura de tela 2026-09-15 232727" src="https://github.com/user-attachments/assets/7697b7c9-ca46-41b8-bec3-92043df66d55" />
+
+<img width="600" height="500" alt="Captura de tela 2026-10-02 163428" src="https://github.com/user-attachments/assets/5c18660a-c8b9-4ecb-96fe-4c68881ef74f" />
+
 
 </p>
 
@@ -171,13 +178,7 @@ BookMind also derives a short-book preference from the book's page count.
 
 ### Compatibility Scoring
 
-Recommendations are ranked using a weighted compatibility score:
-
-| Component | Weight |
-|---|---:|
-| Genre compatibility | 40% |
-| Reading preference compatibility | 35% |
-| Mood compatibility | 25% |
+Recommendations are ranked using a weighted compatibility score.
 
 The selected page range is used as a filtering criterion. After the initial ranking, BookMind can use Gemini to generate concise, personalized explanations for the recommended books, based on the reader's preferences and the available literary analysis.
 
@@ -187,27 +188,24 @@ This approach combines deterministic scoring with AI-generated explanations, mak
 
 ## 📖 How BookMind Works
 
-### 1. Search for a book
+### Search for a book
 
 Users search for a title through the BookMind interface. The backend retrieves available metadata from Google Books and Open Library.
 
-### 2. Explore the book
+### Explore the book
 
 BookMind presents information such as the title, author, cover, description, categories, ratings, and preview links.
-
-### 3. Analyze the book
-
 Google Gemini can generate a summary and analyze the book's genre characteristics, reading profile, themes, atmosphere, and story elements.
 
-### 4. Find your next book
+### Find your next book
 
 Users select their preferred genres, desired reading experience, mood, and page range. BookMind evaluates eligible books and ranks them according to the compatibility scoring system.
 
-### 5. Understand the recommendations
+### Understand the recommendations
 
 Personalized explanations highlight the characteristics that make each recommended book relevant to the user's preferences.
 
-### 6. Reuse stored data
+### Reuse stored data
 
 Book metadata and literary analysis are stored in PostgreSQL, allowing previously processed books to be retrieved without unnecessarily repeating the same work.
 
@@ -224,8 +222,6 @@ The authentication flow includes:
 - JWT access tokens stored in `HttpOnly` cookies.
 - CSRF protection for state-changing requests.
 - User session validation and logout.
-
-The access token is not directly accessible to frontend JavaScript, reducing its exposure to certain client-side attacks. Security also depends on correct cookie configuration, token validation, and deployment settings.
 
 ---
 
