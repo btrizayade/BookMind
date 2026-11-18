@@ -9,12 +9,16 @@ import {
 import "./App.css";
 
 import loadingIcon from "./assets/loading.png";
+import yellowFrame from "./assets/yellow-canva.png";
+import greenFrame from "./assets/green-canva.png";
+import purpleFrame from "./assets/purple-canva.png";
 
 import Sidebar from "./components/Sidebar/Sidebar";
 import Topbar from "./components/Topbar/Topbar";
 import BookView from "./components/Book/Book";
 import Recommendations from "./components/Recommendations/Recommendations";
 import Login from "./pages/Login/Login";
+import IllustratedFrame from "./components/IllustratedFrame";
 
 import {
   getCurrentUser,
@@ -413,6 +417,7 @@ function App() {
         isLoginPage={showLogin}
         onLogin={() => setShowLogin(true)}
         onBack={handleTopbarBack}
+        onHome={showLogin ? handleTopbarBack : handleHome}
         userName={currentUser?.name ?? null}
         onLogout={handleLogout}
       />
@@ -459,36 +464,50 @@ function App() {
                       onSelectBook={handleSelectRecommendedBook}
                     />
                   ) : loading ? (
-                    <div className="loading-card">
-                      <img
-                        className="loading-icon"
-                        src={loadingIcon}
-                        alt=""
-                        aria-hidden="true"
-                      />
+                    <IllustratedFrame
+                      asset={greenFrame}
+                      className="illustrated-frame-loading"
+                    >
+                      <div className="loading-card">
+                        <img
+                          className="loading-icon"
+                          src={loadingIcon}
+                          alt=""
+                          aria-hidden="true"
+                        />
 
-                      <h3>Searching...</h3>
+                        <h3>Searching...</h3>
 
-                      <p>
-                        We are searching for your next great read!
-                      </p>
-                    </div>
-                  ) : error ? (
-                    <div className="error-card">
-                      <div className="error-icon">☕︎</div>
-
-                      <div>
-                        <h3>Book not found</h3>
-                        <p>{error}</p>
+                        <p>
+                          We are searching for your next great read!
+                        </p>
                       </div>
-                    </div>
+                    </IllustratedFrame>
+                  ) : error ? (
+                    <IllustratedFrame
+                      asset={purpleFrame}
+                      className="illustrated-frame-error"
+                    >
+                      <div className="error-card">
+                        <div className="error-icon">☕︎</div>
+
+                        <div>
+                          <h3>Book not found</h3>
+                          <p>{error}</p>
+                        </div>
+                      </div>
+                    </IllustratedFrame>
                   ) : book ? (
                     <BookView book={book} />
                   ) : (
-                    <form
-                      className="search-content"
-                      onSubmit={handleSearch}
+                    <IllustratedFrame
+                      asset={yellowFrame}
+                      className="illustrated-frame-search"
                     >
+                      <form
+                        className="search-content"
+                        onSubmit={handleSearch}
+                      >
                       <span
                         className="search-tape"
                         aria-hidden="true"
@@ -689,7 +708,8 @@ function App() {
                       >
                         a little literary treasure awaits for you
                       </span>
-                    </form>
+                      </form>
+                    </IllustratedFrame>
                   )}
                 </main>
               )}
