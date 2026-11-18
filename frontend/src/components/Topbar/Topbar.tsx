@@ -1,4 +1,5 @@
 import logout from "../../assets/logout.png";
+import logo from "../../assets/minilogo.png";
 
 import "./Topbar.css";
 
@@ -6,6 +7,7 @@ interface TopbarProps {
   isLoginPage: boolean;
   onLogin: () => void;
   onBack: () => void;
+  onHome: () => void;
   userName: string | null;
   onLogout: () => void;
 }
@@ -14,11 +16,22 @@ function Topbar({
   isLoginPage,
   onLogin,
   onBack,
+  onHome,
   userName,
   onLogout,
 }: TopbarProps) {
   return (
     <header className="topbar">
+      <button
+        type="button"
+        className="topbar-brand"
+        onClick={onHome}
+        aria-label="BookMind home"
+        title="BookMind home"
+      >
+        <img src={logo} alt="" aria-hidden="true" />
+      </button>
+
       {isLoginPage ? (
         <button
           type="button"

@@ -358,7 +358,7 @@ function Login({ onBack }: LoginProps) {
 
           <p className="login-register">
             {isSignUp
-              ? "Already have an account?"
+              ? "Already registered?"
               : "Don't have an account?"}{" "}
 
             <button

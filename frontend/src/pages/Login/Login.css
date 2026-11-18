@@ -31,7 +31,7 @@
 }
 
 .login-eyebrow {
-  margin: -25px 0 4px;
+  margin: 10px 0 4px;
 
   color: #9b6f63;
 
@@ -298,11 +298,12 @@
  */
 
 .signup-composition {
-  width: min(500px, 100vw);
-  height: min(550px, 100vw);
+  width: min(400px, 100vw);
+  height: min(450px, 100vw);
   aspect-ratio: 1 / 1;
 
-  margin-top: 50px;
+  margin-top: -5px;
+  margin-left: 10px;
 }
 
 /* =====================================
@@ -467,4 +468,87 @@
 
     font-size: 0.57rem;
   }
+}
+
+/* Coordinated image and form layout. These page-scoped rules keep the
+   original illustrations and content aligned despite global theme styles. */
+.login-page {
+  min-height: 0;
+  padding: 8px 20px 4px;
+}
+
+.login-page .login-intro {
+  margin-bottom: 0;
+}
+
+.login-page .login-composition {
+  width: min(560px, 88vw);
+  height: auto;
+  aspect-ratio: 1312 / 1199;
+  margin-top: 0;
+  overflow: visible;
+}
+
+.login-page .signup-composition {
+  width: min(540px, 88vw, calc((100dvh - 200px) * 0.86));
+  aspect-ratio: 1136 / 1385;
+}
+
+.login-page .login-paper {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.login-page .login-content {
+  top: 26%;
+  left: 14%;
+  width: 72%;
+  height: 60%;
+  padding: 0;
+  justify-content: center;
+}
+
+.login-page .signup-content {
+  top: 22%;
+  left: 23%;
+  width: 60%;
+  height: 60%;
+  padding: 0;
+  justify-content: center;
+}
+
+.login-page .login-form { width: min(84%, 380px); }
+.login-page .signup-form { width: min(88%, 400px); }
+.login-page .login-form label { margin-bottom: 3px; }
+.login-page .login-form input { height: 39px; margin-bottom: 8px; }
+.login-page .signup-form label { margin-bottom: 3px; }
+.login-page .signup-form input { height: 36px; margin-bottom: 2px; }
+.login-page .signup-form button { width: 72%; margin-top: 4px; }
+.login-page .login-register { margin-top: 8px; }
+
+@media (max-width: 750px) {
+  .login-page { padding: 12px 16px 14px; }
+  .login-page .login-composition { width: min(560px, calc(100vw - 32px)); margin-top: 10px; }
+  .login-page .signup-composition { width: min(520px, calc(100vw - 32px), calc((100dvh - 200px) * 0.86)); }
+  .login-page .login-content { top: 25%; left: 13%; width: 74%; height: 62%; }
+  .login-page .signup-content { top: 22%; left: 23%; width: 60%; height: 60%; }
+  .login-page .login-form { width: min(88%, 390px); }
+  .login-page .signup-form { width: min(88%, 400px); }
+}
+
+@media (max-width: 500px) {
+  .login-page { padding: 12px 12px 14px; }
+  .login-page .login-composition { width: min(460px, calc(100vw - 24px)); margin-top: 8px; }
+  .login-page .signup-composition { width: min(420px, calc(100vw - 24px), calc((100dvh - 200px) * 0.86)); }
+  .login-page .login-content { top: 24%; left: 12%; width: 76%; height: 64%; }
+  .login-page .signup-content { top: 16%; left: 21%; width: 62%; height: 67%; }
+  .login-page .login-form { width: 90%; }
+  .login-page .signup-form { width: 85%; }
+  .login-page .signup-form input { height: 33px; margin-bottom: 4px; }
+  .login-page .login-form input { height: 35px; margin-bottom: 5px; }
+  .login-page .login-form label { margin-bottom: 2px; font-size: .65rem; }
+  .login-page .login-form button { width: 75%; min-height: 38px; margin-top: 3px; padding: 7px 12px; font-size: .86rem; }
+  .login-page .signup-form button { width: 75%; min-height: 38px; margin-top: 3px; padding: 7px 12px; font-size: .86rem; }
+  .login-page .login-register { margin-top: 8px; font-size: .82rem; }
 }
