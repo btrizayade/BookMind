@@ -203,11 +203,11 @@ function Login({ onBack }: LoginProps) {
             : "Welcome back to BookMind"}
         </h1>
 
-        <p className="login-subtitle">
-          {isSignUp
-            ? "Create your little reading corner."
-            : "Discover wonderful stories, one page at a time."}
-        </p>
+        {!isSignUp && (
+          <p className="login-subtitle">
+            Discover wonderful stories, one page at a time.
+          </p>
+        )}
       </div>
 
       <section
@@ -357,9 +357,11 @@ function Login({ onBack }: LoginProps) {
           </form>
 
           <p className="login-register">
-            {isSignUp
-              ? "Already registered?"
-              : "Don't have an account?"}{" "}
+            <span>
+              {isSignUp
+                ? "Already registered?"
+                : "Don't have an account?"}
+            </span>
 
             <button
               type="button"
