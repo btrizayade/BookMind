@@ -3,7 +3,7 @@ import {
   useRef,
   useState,
   type SubmitEvent,
-  type KeyboardEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 
 import "./App.css";
@@ -13,9 +13,10 @@ import yellowFrame from "./assets/yellow-canva.png";
 import greenFrame from "./assets/green-canva.png";
 import purpleFrame from "./assets/purple-canva.png";
 
-import Sidebar from "./components/Sidebar/Sidebar";
+import Sidebar, { type ActivePage } from "./components/Sidebar/Sidebar";
 import Topbar from "./components/Topbar/Topbar";
 import BookView from "./components/Book/Book";
+import HomeNavigationPanel from "./components/HomeNavigationPanel";
 import Recommendations from "./components/Recommendations/Recommendations";
 import Login from "./pages/Login/Login";
 import IllustratedFrame from "./components/IllustratedFrame";
@@ -29,8 +30,6 @@ import {
 } from "./services/api";
 
 import type { Book } from "./types/book";
-
-type MainContent = "search" | "recommendations" | null;
 
 interface CurrentUser {
   id: number;
@@ -46,10 +45,12 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const [mainContent, setMainContent] =
-    useState<MainContent>(null);
+  const [activePage, setActivePage] = useState<ActivePage>("home");
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] =
+    useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [hasVisitedRecommendations, setHasVisitedRecommendations] =
     useState(false);
 
   const [suggestions, setSuggestions] =
@@ -72,9 +73,10 @@ function App() {
   const [isHomeReturning, setIsHomeReturning] = useState(false);
 
   const searchRequestId = useRef(0);
+  const bookRequestId = useRef(0);
   const skipAutocompleteRef = useRef(false);
-
-  const hasContent = mainContent !== null;
+  const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
+  const wasMobileSidebarOpen = useRef(false);
   /*
    * SESSÃO
    *
@@ -108,6 +110,64 @@ function App() {
       isMounted = false;
     };
   }, [showLogin]);
+
+  useEffect(() => {
+    if (!isMobileSidebarOpen) {
+      return;
+    }
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsMobileSidebarOpen(false);
+        return;
+      }
+
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const sidebar = document.getElementById("bookmind-sidebar");
+      const focusable = Array.from(
+        sidebar?.querySelectorAll<HTMLButtonElement>("button:not(:disabled)") ?? [],
+      ).filter((button) => button.getClientRects().length > 0);
+
+      if (focusable.length === 0) {
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const focusIsInsideSidebar = sidebar?.contains(document.activeElement);
+
+      if (event.shiftKey && (!focusIsInsideSidebar || document.activeElement === first)) {
+        event.preventDefault();
+        last?.focus();
+      } else if (!event.shiftKey && (!focusIsInsideSidebar || document.activeElement === last)) {
+        event.preventDefault();
+        first?.focus();
+      }
+    }
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [isMobileSidebarOpen]);
+
+  useEffect(() => {
+    if (isMobileSidebarOpen) {
+      document
+        .querySelector<HTMLButtonElement>("#bookmind-sidebar .sidebar-mobile-close")
+        ?.focus();
+    } else if (wasMobileSidebarOpen.current) {
+      const focusTarget =
+        mobileMenuButtonRef.current ??
+        document.querySelector<HTMLButtonElement>(
+          ".home-navigation-panel .home-panel-action",
+        );
+      focusTarget?.focus();
+    }
+
+    wasMobileSidebarOpen.current = isMobileSidebarOpen;
+  }, [isMobileSidebarOpen]);
 
   /*
    * AUTOCOMPLETE
@@ -193,6 +253,7 @@ function App() {
     }
 
     searchRequestId.current += 1;
+    const requestId = ++bookRequestId.current;
 
     setShowSuggestions(false);
     setSuggestions([]);
@@ -205,17 +266,23 @@ function App() {
     try {
       const data = await searchBook(trimmedTitle);
 
-      setBook(data);
+      if (requestId === bookRequestId.current) {
+        setBook(data);
+      }
     } catch (err) {
       console.error(err);
 
-      setError(
-        "It was not possible to find this book. Please try again."
-      );
+      if (requestId === bookRequestId.current) {
+        setError(
+          "It was not possible to find this book. Please try again."
+        );
 
-      setBook(null);
+        setBook(null);
+      }
     } finally {
-      setLoading(false);
+      if (requestId === bookRequestId.current) {
+        setLoading(false);
+      }
     }
   }
 
@@ -227,6 +294,7 @@ function App() {
   ) {
     skipAutocompleteRef.current = true;
     searchRequestId.current += 1;
+    const requestId = ++bookRequestId.current;
 
     setTitle(suggestion.title);
 
@@ -238,7 +306,7 @@ function App() {
     setError("");
     setBook(null);
 
-    setMainContent("search");
+    setActivePage("search");
 
     try {
       /*
@@ -251,17 +319,23 @@ function App() {
         suggestion.author,
       );
 
-      setBook(data);
+      if (requestId === bookRequestId.current) {
+        setBook(data);
+      }
     } catch (err) {
       console.error(err);
 
-      setError(
-        "It was not possible to find this book. Please try again."
-      );
+      if (requestId === bookRequestId.current) {
+        setError(
+          "It was not possible to find this book. Please try again."
+        );
 
-      setBook(null);
+        setBook(null);
+      }
     } finally {
-      setLoading(false);
+      if (requestId === bookRequestId.current) {
+        setLoading(false);
+      }
     }
   }
 
@@ -269,32 +343,47 @@ function App() {
    * ABRE A ÁREA DE BUSCA
    */
   function handleOpenSearch() {
-    const wasInitialState = !hasContent;
+    setShowLogin(false);
+    setIsMobileSidebarOpen(false);
 
-    setMainContent("search");
+    if (activePage === "search") {
+      return;
+    }
+
+    searchRequestId.current += 1;
+    bookRequestId.current += 1;
+    setActivePage("search");
     setBook(null);
     setLoading(false);
     setError("");
-
-    if (wasInitialState) {
-      setIsSidebarCollapsed(true);
-    }
+    setShowSuggestions(false);
+    setSuggestions([]);
+    setSuggestionsLoading(false);
+    setHighlightedSuggestionIndex(-1);
   }
 
   /*
    * ABRE A ÁREA DE RECOMENDAÇÕES
    */
   function handleRecommendations() {
-    const wasInitialState = !hasContent;
+    setShowLogin(false);
+    setIsMobileSidebarOpen(false);
 
-    setMainContent("recommendations");
+    if (activePage === "recommendations") {
+      return;
+    }
+
+    searchRequestId.current += 1;
+    bookRequestId.current += 1;
+    setActivePage("recommendations");
+    setHasVisitedRecommendations(true);
     setError("");
     setBook(null);
     setLoading(false);
-
-    if (wasInitialState) {
-      setIsSidebarCollapsed(true);
-    }
+    setShowSuggestions(false);
+    setSuggestions([]);
+    setSuggestionsLoading(false);
+    setHighlightedSuggestionIndex(-1);
   }
 
   /*
@@ -305,7 +394,8 @@ function App() {
       title: string;
     }
   ) {
-    setMainContent("search");
+    const requestId = ++bookRequestId.current;
+    setActivePage("search");
     setLoading(true);
     setError("");
     setBook(null);
@@ -315,17 +405,23 @@ function App() {
     try {
       const data = await searchBook(recommendedBook.title);
 
-      setBook(data);
+      if (requestId === bookRequestId.current) {
+        setBook(data);
+      }
     } catch (err) {
       console.error(err);
 
-      setError(
-        "It was not possible to find this book. Please try again."
-      );
+      if (requestId === bookRequestId.current) {
+        setError(
+          "It was not possible to find this book. Please try again."
+        );
 
-      setBook(null);
+        setBook(null);
+      }
     } finally {
-      setLoading(false);
+      if (requestId === bookRequestId.current) {
+        setLoading(false);
+      }
     }
   }
 
@@ -334,8 +430,11 @@ function App() {
    */
   function handleHome() {
     setIsHomeReturning(false);
+    setShowLogin(false);
+    setIsMobileSidebarOpen(false);
 
     searchRequestId.current += 1;
+    bookRequestId.current += 1;
     skipAutocompleteRef.current = false;
 
     setTitle("");
@@ -343,8 +442,8 @@ function App() {
     setLoading(false);
     setError("");
 
-    setMainContent(null);
-    setIsSidebarCollapsed(false);
+    setActivePage("home");
+    setHasVisitedRecommendations(false);
 
     setSuggestions([]);
     setShowSuggestions(false);
@@ -371,7 +470,9 @@ function App() {
    * VOLTA DO LOGIN COM UMA ENTRADA SUAVE
    */
   function handleTopbarBack() {
+    setIsMobileSidebarOpen(false);
     searchRequestId.current += 1;
+    bookRequestId.current += 1;
     skipAutocompleteRef.current = false;
 
     setTitle("");
@@ -379,8 +480,8 @@ function App() {
     setLoading(false);
     setError("");
 
-    setMainContent(null);
-    setIsSidebarCollapsed(false);
+    setActivePage("home");
+    setHasVisitedRecommendations(false);
 
     setSuggestions([]);
     setShowSuggestions(false);
@@ -404,18 +505,20 @@ function App() {
    * SIDEBAR
    */
   function handleToggleSidebar() {
-    if (!hasContent) {
-      return;
-    }
-
     setIsSidebarCollapsed((current) => !current);
   }
+
+  const showSidebar = activePage !== "home" || showLogin;
+  const isHomeLanding = activePage === "home" && !showLogin;
 
   return (
     <>
       <Topbar
         isLoginPage={showLogin}
-        onLogin={() => setShowLogin(true)}
+        onLogin={() => {
+          setShowLogin(true);
+          setIsMobileSidebarOpen(false);
+        }}
         onBack={handleTopbarBack}
         onHome={showLogin ? handleTopbarBack : handleHome}
         userName={currentUser?.name ?? null}
@@ -423,47 +526,89 @@ function App() {
       />
 
       <div className="page-scroll">
-        {showLogin ? (
-          <Login
-            onBack={() => setShowLogin(false)}
-          />
-        ) : (
-          <div className="container">
-            <div
-              className={`layout ${
-                hasContent
-                  ? "layout-content"
-                  : "layout-empty"
-              } ${
-                hasContent && isSidebarCollapsed
-                  ? "layout-sidebar-collapsed"
-                  : ""
-              }`}
-              style={
-                isHomeReturning
-                  ? {
-                      animation:
-                        "scrapbook-fade 0.45s ease both",
-                    }
-                  : undefined
-              }
-            >
+        <div
+          className={`app-shell ${
+            isHomeLanding
+              ? "app-shell-home"
+              : isSidebarCollapsed
+                ? "app-shell-sidebar-collapsed"
+                : ""
+          }`}
+        >
+          {showSidebar && isMobileSidebarOpen && (
+            <button
+              className="sidebar-backdrop"
+              onClick={() => setIsMobileSidebarOpen(false)}
+              aria-label="Fechar navegação"
+              type="button"
+            />
+          )}
+
+          {showSidebar && (
+            <div className="sidebar-slot">
               <Sidebar
+                activePage={activePage}
+                isCollapsed={isSidebarCollapsed}
+                isMobileOpen={isMobileSidebarOpen}
+                onHome={handleHome}
                 onSearch={handleOpenSearch}
                 onRecommendations={handleRecommendations}
-                onHome={handleHome}
-                hasContent={hasContent}
-                isSidebarCollapsed={isSidebarCollapsed}
-                onToggle={handleToggleSidebar}
+                onToggleCollapsed={handleToggleSidebar}
+                onCloseMobile={() => setIsMobileSidebarOpen(false)}
               />
+            </div>
+          )}
 
-              {hasContent && (
-                <main className="book-area">
-                  {mainContent === "recommendations" ? (
-                    <Recommendations
-                      onSelectBook={handleSelectRecommendedBook}
-                    />
-                  ) : loading ? (
+          <main className="app-main">
+            {showSidebar && (
+              <button
+                ref={mobileMenuButtonRef}
+                className="mobile-menu-toggle"
+                onClick={() => setIsMobileSidebarOpen((open) => !open)}
+                aria-expanded={isMobileSidebarOpen}
+                aria-controls="bookmind-sidebar"
+                aria-label={isMobileSidebarOpen ? "Fechar navegação" : "Abrir navegação"}
+                type="button"
+              >
+                <span aria-hidden="true">☰</span>
+                <span>Menu</span>
+              </button>
+            )}
+
+            <div className="app-main-content" hidden={showLogin}>
+              <div
+                className={`app-page-content ${
+                  activePage === "home"
+                    ? "app-page-content-home"
+                    : activePage === "search"
+                      ? "app-page-content-centered"
+                      : ""
+                }`}
+                style={
+                  isHomeReturning
+                    ? { animation: "scrapbook-fade 0.45s ease both" }
+                    : undefined
+                }
+              >
+                {activePage === "home" && (
+                  <HomeNavigationPanel
+                    onSearch={handleOpenSearch}
+                    onRecommendations={handleRecommendations}
+                  />
+                )}
+
+                  {hasVisitedRecommendations && (
+                    <div
+                      className="recommendations-page-slot"
+                      hidden={activePage !== "recommendations"}
+                    >
+                      <Recommendations
+                        onSelectBook={handleSelectRecommendedBook}
+                      />
+                    </div>
+                  )}
+
+                {activePage === "search" && (loading ? (
                     <IllustratedFrame
                       asset={greenFrame}
                       className="illustrated-frame-loading"
@@ -544,7 +689,7 @@ function App() {
                             setHighlightedSuggestionIndex(-1);
                           }}
                           onKeyDown={(
-                            event: KeyboardEvent<HTMLInputElement>
+                            event: ReactKeyboardEvent<HTMLInputElement>
                           ) => {
                             if (
                               !showSuggestions ||
@@ -710,12 +855,12 @@ function App() {
                       </span>
                       </form>
                     </IllustratedFrame>
-                  )}
-                </main>
-              )}
+                  ))}
+              </div>
             </div>
-          </div>
-        )}
+            {showLogin && <Login onBack={() => setShowLogin(false)} />}
+          </main>
+        </div>
       </div>
     </>
   );

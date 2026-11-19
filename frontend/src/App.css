@@ -8,218 +8,42 @@
   box-sizing: border-box;
 }
 
-/* =====================================
-   BODY
-===================================== */
-
-body {
-  font-family: Inter, sans-serif;
-  background: #f7efe4;
-
-  /* A rolagem da aplicação fica somente em .page-scroll. */
-  overflow: hidden;
-}
-
-/* =====================================
-   PAGE SCROLL
-   Scrollbar começa abaixo da Topbar
-===================================== */
-
-.page-scroll {
-  position: fixed;
-
-  top: var(--topbar-height);
-  left: 0;
-  right: 0;
-  bottom: 0;
-
-  overflow-y: auto;
-  overflow-x: hidden;
-
-  scrollbar-width: thin;
-  scrollbar-color: #722f37 transparent;
-}
-
-.page-scroll::-webkit-scrollbar {
-  width: 8px;
-}
-
-.page-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.page-scroll::-webkit-scrollbar-thumb {
-  background: #722f37;
-  border-radius: 10px;
-}
-
-.page-scroll::-webkit-scrollbar-thumb:hover {
-  background: #5d252c;
-}
-
-/* =====================================
-   CONTAINER
-===================================== */
-
-.container {
-  min-height: calc(100vh - var(--topbar-height));
-  width: 100%;
-
-  padding: 76px 40px 32px;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* =====================================
-   BASE LAYOUT
-===================================== */
-
-.layout {
-  width: 100%;
-
-  transition:
-    max-width 0.35s ease,
-    grid-template-columns 0.35s ease,
-    gap 0.35s ease;
-}
-
-/* =====================================
-   INITIAL STATE
-   Sidebar centered
-===================================== */
-
-.layout-empty {
-  width: 100%;
-  max-width: 380px;
-
-  margin: auto;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* =====================================
-   CONTENT STATE
-===================================== */
-
-.layout-content {
-  width: 100%;
-  max-width: 1500px;
-  display: grid;
-
-  grid-template-columns: 300px minmax(0, 1fr);
-
-  gap: 36px;
-
-  /*
-   * IMPORTANTE:
-   * A sidebar não será mais centralizada
-   * pela altura do conteúdo de recomendações.
-   */
-  align-items: start;
-}
-
-/* =====================================
-   SIDEBAR — CONTENT STATE
-===================================== */
-
-.layout-content > .sidebar {
-  /*
-   * A sidebar deve ser posicionada em relação
-   * à altura da viewport, e não à altura da
-   * página de recomendações.
-   */
-  margin-top: max(
-    0px,
-    calc((100vh - 620px) / 2)
-  );
-
-  margin-left: 0;
-  margin-right: 0;
-
-  align-self: start;
-
-  /*
-   * Ajuste visual da posição vertical
-   * da sidebar no estado com conteúdo.
-   */
-  transform: translateY(-100px);
-}
-
-/* =====================================
-   COLLAPSED SIDEBAR
-===================================== */
-
-.layout-content.layout-sidebar-collapsed {
-  grid-template-columns: 44px minmax(0, 1fr);
-
-  gap: 24px;
-}
-
-/*
- * Quando recolhida, usamos uma altura menor
- * para manter a setinha centralizada na viewport.
- */
-.layout-content.layout-sidebar-collapsed > .sidebar {
-  margin-top: max(
-    0px,
-    calc((100vh - 220px) / 2)
-  );
-}
-
-/* =====================================
-   MAIN CONTENT
-===================================== */
-
-.book-area {
-  width: 100%;
-  min-width: 0;
-  position: relative;
-  top: 20px;
-  min-height: 600px;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
+/* PAGE AND APPLICATION SHELL */
+.page-scroll { width: 100%; min-height: calc(100dvh - var(--topbar-height)); }
+.app-shell { --app-shell-block-padding: clamp(14px, 2vh, 24px); display: grid; grid-template-columns: 264px minmax(0, 1fr); align-items: start; gap: clamp(18px, 2.2vw, 32px); width: min(100%, 1760px); min-height: calc(100dvh - var(--topbar-height)); margin-inline: auto; padding: var(--app-shell-block-padding) clamp(16px, 3vw, 40px); transition: grid-template-columns 220ms ease, gap 220ms ease; }
+.app-shell-home { grid-template-columns: minmax(0, 1fr); }
+.app-shell-sidebar-collapsed { grid-template-columns: 76px minmax(0, 1fr); }
+.sidebar-slot { position: sticky; top: var(--topbar-height); align-self: start; display: flex; align-items: center; height: calc(100dvh - var(--topbar-height) - var(--app-shell-block-padding) - var(--app-shell-block-padding)); }
+.app-main { container: app-content / inline-size; display: flex; flex-direction: column; min-width: 0; min-height: calc(100dvh - var(--topbar-height) - var(--app-shell-block-padding) - var(--app-shell-block-padding)); }
+.app-main-content { display: flex; flex: 1 1 auto; min-width: 0; }
+.app-page-content { display: flex; flex: 1 1 auto; flex-direction: column; align-items: center; gap: 18px; width: 100%; min-width: 0; min-height: calc(100dvh - var(--topbar-height) - var(--app-shell-block-padding) - var(--app-shell-block-padding)); }
+.recommendations-page-slot { display: flex; flex: 1 1 auto; flex-direction: column; width: 100%; min-width: 0; }
+.app-page-content-home,
+.app-page-content-centered { justify-content: center; }
+.mobile-menu-toggle, .sidebar-backdrop { display: none; }
+[hidden] { display: none !important; }
+.sidebar-backdrop { position: fixed; inset: var(--topbar-height) 0 0; z-index: 91; border: 0; background: rgba(50, 30, 20, 0.34); }
+.mobile-menu-toggle { align-items: center; justify-content: center; align-self: flex-start; gap: 8px; min-width: 94px; min-height: 42px; margin-bottom: 12px; padding: 7px 12px; border: 2px solid var(--outline); border-radius: 10px 13px 9px 12px; background-color: var(--paper-warm); background-image: var(--grain); color: var(--ink); font: 700 0.95rem 'Patrick Hand', cursive; cursor: pointer; }
 /* =====================================
    SEARCH PAGE
 ===================================== */
 
 .search-content {
   position: relative;
-
   width: 100%;
-  max-width: 720px;
-
-  padding: 42px 50px 40px;
-
-  background:
-    linear-gradient(
-      rgba(255, 255, 255, 0.18),
-      rgba(255, 255, 255, 0.18)
-    ),
-    #fdf8f1;
-
-  border: 1px solid #dfcdb8;
-
-  box-shadow:
-    0 18px 35px rgba(82, 50, 39, 0.08),
-    5px 6px 0 rgba(114, 47, 55, 0.035);
-
-  transform: rotate(-0.35deg);
-
-  /* sobe um pouco na tela */
-  top: -50px;
-
+  max-width: none;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
   overflow: visible;
-
   text-align: center;
-
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   animation: scrapbook-search-entry 0.45s ease;
 }
 
@@ -719,35 +543,29 @@ body {
 
 .loading-card {
   position: relative;
-
-  top: -50px;
-
-  width: 360px;
-
-  padding: 28px;
-
-  border-radius: 20px;
-
-  background: #fdf8f3;
-
-  border: 1px solid #e4d2bc;
-
-  box-shadow:
-    0 14px 32px rgba(0, 0, 0, 0.08);
-
+  top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--ink);
   text-align: center;
-
-  animation:
-    scrapbook-fade 0.25s ease;
+  animation: scrapbook-fade 0.25s ease;
 }
 
 .loading-icon {
   display: block;
 
-  width: 64px;
-  height: 64px;
+  width: 52px;
+  height: 52px;
 
-  margin: 0 auto 16px;
+  margin: 0 auto 9px;
 
   object-fit: contain;
 
@@ -772,27 +590,20 @@ body {
 ===================================== */
 
 .error-card {
-  width: 420px;
-
-  padding: 22px;
-
-  border-radius: 18px;
-
-  background: #f9efe8;
-
-  border: 1px solid #e4cbb9;
-
   display: flex;
-
-  gap: 16px;
-
-  align-items: flex-start;
-
-  box-shadow:
-    0 10px 30px rgba(0, 0, 0, 0.08);
-
-  animation:
-    scrapbook-fade 0.25s ease;
+  justify-content: center;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  max-width: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--ink);
+  text-align: left;
+  animation: scrapbook-fade 0.25s ease;
 }
 
 .error-icon {
@@ -816,42 +627,17 @@ body {
    RESPONSIVE
 ===================================== */
 
-@media (max-width: 1000px) {
-  .container {
-    padding: 24px;
-  }
-
-  .layout-content {
-    grid-template-columns: 240px minmax(0, 1fr);
-
+@media (max-width: 1050px) {
+  .app-shell {
+    grid-template-columns: 220px minmax(0, 1fr);
     gap: 28px;
   }
 
-  .layout-content > .sidebar {
-    margin-top: max(
-      0px,
-      calc((100vh - 620px) / 2)
-    );
-  }
-
-  .layout-content.layout-sidebar-collapsed {
-    grid-template-columns: 44px minmax(0, 1fr);
-
+  .app-shell-sidebar-collapsed {
+    grid-template-columns: 76px minmax(0, 1fr);
     gap: 18px;
   }
 
-  .layout-content.layout-sidebar-collapsed > .sidebar {
-    margin-top: max(
-      0px,
-      calc((100vh - 700px) / 2)
-    );
-  }
-
-  .search-content {
-    max-width: 650px;
-
-    padding: 38px 35px;
-  }
 }
 
 /* =====================================
@@ -859,40 +645,32 @@ body {
 ===================================== */
 
 @media (max-width: 750px) {
-  .container {
-    padding: 20px;
-  }
-
-  .layout-content,
-  .layout-content.layout-sidebar-collapsed {
+  .app-shell,
+  .app-shell-sidebar-collapsed {
     grid-template-columns: minmax(0, 1fr);
-
-    gap: 20px;
+    gap: 0;
+    min-height: calc(100dvh - var(--topbar-height));
+    padding: 12px 16px 24px;
   }
 
-  .layout-content > .sidebar,
-  .layout-content.layout-sidebar-collapsed > .sidebar {
-    margin-top: 0;
+  .sidebar-slot { position: static; height: 0; }
+
+  .app-main {
+    min-height: calc(100dvh - var(--topbar-height) - 36px);
   }
 
-  .book-area {
-    min-height: auto;
+  .mobile-menu-toggle {
+    display: inline-flex;
   }
 
-  .search-content {
-    padding: 34px 25px;
+  .app-page-content {
+    min-height: calc(100dvh - var(--topbar-height) - 100px);
   }
 
   .search-content h1 {
     font-size: 2.65rem;
   }
 
-  .loading-card,
-  .error-card {
-    width: 100%;
-
-    max-width: 420px;
-  }
 }
 
 /* =====================================
@@ -900,10 +678,6 @@ body {
 ===================================== */
 
 @media (max-width: 500px) {
-  .search-content {
-    padding: 30px 18px;
-  }
-
   .search-content h1 {
     font-size: 2.35rem;
   }

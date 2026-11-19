@@ -1,150 +1,167 @@
-import logo from "../../assets/logo.png";
+import { useState } from "react";
 import miniLogo from "../../assets/minilogo.png";
 import searchIcon from "../../assets/search.png";
 import findIcon from "../../assets/find.png";
-import searchButton from "../../assets/search-button.png";
-import findButton from "../../assets/find-button.png";
 import "./Sidebar.css";
 
+export type ActivePage = "home" | "search" | "recommendations";
+
 interface SidebarProps {
+  activePage: ActivePage;
+  isCollapsed: boolean;
+  isMobileOpen: boolean;
+  onHome: () => void;
   onSearch: () => void;
   onRecommendations: () => void;
-  onHome: () => void;
-  hasContent: boolean;
-  isSidebarCollapsed: boolean;
-  onToggle: () => void;
+  onToggleCollapsed: () => void;
+  onCloseMobile: () => void;
+}
+
+type ChevronDirection = "left" | "right" | "down";
+
+function ChevronIcon({ direction }: { direction: ChevronDirection }) {
+  return (
+    <svg
+      className={`sidebar-chevron sidebar-chevron-${direction}`}
+      viewBox="0 0 16 16"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="m5 3 5 5-5 5" />
+    </svg>
+  );
 }
 
 function Sidebar({
+  activePage,
+  isCollapsed,
+  isMobileOpen,
+  onHome,
   onSearch,
   onRecommendations,
-  onHome,
-  hasContent,
-  isSidebarCollapsed,
-  onToggle,
+  onToggleCollapsed,
+  onCloseMobile,
 }: SidebarProps) {
+  const [isNavigationExpanded, setIsNavigationExpanded] = useState(true);
+
+  const navigationItems = [
+    { page: "home" as const, label: "Início", icon: miniLogo, onClick: onHome },
+    { page: "search" as const, label: "Buscar livros", icon: searchIcon, onClick: onSearch },
+    {
+      page: "recommendations" as const,
+      label: "Recomendações",
+      icon: findIcon,
+      onClick: onRecommendations,
+    },
+  ];
+
   return (
     <aside
-      className={`sidebar ${
-        isSidebarCollapsed ? "sidebar-collapsed" : ""
+      id="bookmind-sidebar"
+      role={isMobileOpen ? "dialog" : undefined}
+      aria-modal={isMobileOpen ? true : undefined}
+      className={`sidebar ${isCollapsed ? "sidebar-collapsed" : ""} ${
+        isMobileOpen ? "sidebar-mobile-open" : ""
       }`}
+      aria-label="Navegação do BookMind"
     >
-      {isSidebarCollapsed ? (
-        hasContent && (
-          <div className="sidebar-rail">
+      <div className="sidebar-brand">
+        {!isCollapsed && <span>BookMind</span>}
+        {isCollapsed ? (
+          <button
+            className="sidebar-expand-button"
+            onClick={onToggleCollapsed}
+            aria-label="Expandir navegação"
+            aria-expanded={false}
+            aria-controls="bookmind-sidebar"
+            title="Expandir navegação"
+            type="button"
+          >
+            <ChevronIcon direction="right" />
+          </button>
+        ) : (
+          <button
+            className="sidebar-collapse-button"
+            onClick={onToggleCollapsed}
+            aria-label="Recolher navegação"
+            aria-expanded={true}
+            aria-controls="bookmind-sidebar"
+            title="Recolher navegação"
+            type="button"
+          >
+            <ChevronIcon direction="left" />
+          </button>
+        )}
+        <button
+          className="sidebar-mobile-close"
+          onClick={onCloseMobile}
+          aria-label="Fechar navegação"
+          title="Fechar navegação"
+          type="button"
+        >
+          ×
+        </button>
+      </div>
+
+      {!isCollapsed && (
+        <div className="sidebar-group">
+          <button
+            className="sidebar-group-toggle"
+            onClick={() => setIsNavigationExpanded((expanded) => !expanded)}
+            aria-expanded={isNavigationExpanded}
+            aria-controls="bookmind-primary-navigation"
+            type="button"
+          >
+            <span>Navegação</span>
+            <ChevronIcon direction={isNavigationExpanded ? "down" : "right"} />
+          </button>
+
+          {isNavigationExpanded && (
+            <nav
+              className="sidebar-nav"
+              id="bookmind-primary-navigation"
+              aria-label="Navegação principal"
+            >
+              {navigationItems.map((item) => (
+                <button
+                  key={item.page}
+                  className={`sidebar-nav-link ${activePage === item.page ? "is-active" : ""}`}
+                  onClick={() => {
+                    item.onClick();
+                    onCloseMobile();
+                  }}
+                  aria-current={activePage === item.page ? "page" : undefined}
+                  title={item.label}
+                  type="button"
+                >
+                  <img src={item.icon} alt="" aria-hidden="true" />
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </nav>
+          )}
+        </div>
+      )}
+
+      {isCollapsed && (
+        <nav className="sidebar-rail" aria-label="Navegação principal">
+          {navigationItems.map((item) => (
             <button
-              className="sidebar-rail-toggle"
-              onClick={onToggle}
-              aria-label="Expand sidebar"
-              title="Expand sidebar"
+              key={item.page}
+              className={`sidebar-rail-link ${activePage === item.page ? "is-active" : ""}`}
+              onClick={() => {
+                item.onClick();
+                onCloseMobile();
+              }}
+              aria-label={item.label}
+              aria-current={activePage === item.page ? "page" : undefined}
+              title={item.label}
               type="button"
             >
-              ‹
+              <img src={item.icon} alt="" aria-hidden="true" />
             </button>
-
-            <button
-              className="sidebar-rail-action sidebar-rail-home"
-              onClick={onHome}
-              aria-label="Back to home"
-              title="Back to home"
-              type="button"
-            >
-              <img
-                src={miniLogo}
-                alt="BookMind"
-                className="sidebar-rail-logo"
-              />
-            </button>
-
-            <button
-              className="sidebar-rail-action"
-              onClick={onSearch}
-              aria-label="Search a Book"
-              title="Search a Book"
-              type="button"
-            >
-              <img
-                src={searchIcon}
-                alt=""
-                aria-hidden="true"
-              />
-            </button>
-
-            <button
-              className="sidebar-rail-action"
-              onClick={onRecommendations}
-              aria-label="Find My Next Book"
-              title="Find My Next Book"
-              type="button"
-            >
-              <img
-                src={findIcon}
-                alt=""
-                aria-hidden="true"
-              />
-            </button>
-          </div>
-        )
-      ) : (
-        <>
-          <div className="sidebar-top">
-            {hasContent && (
-              <button
-                className="sidebar-toggle sidebar-toggle-open"
-                onClick={onToggle}
-                aria-label="Collapse sidebar"
-                title="Collapse sidebar"
-                type="button"
-              >
-                ‹
-              </button>
-            )}
-
-            <img
-              src={logo}
-              alt="BookMind"
-              className="logo"
-            />
-          </div>
-
-          <p className="subtitle">
-            Discover your next favorite book with AI.
-          </p>
-
-          <div className="divider"></div>
-
-            <button
-              className="sidebar-action image-button"
-              onClick={onSearch}
-              type="button"
-            >
-              <img
-                src={searchButton}
-                alt=""
-                aria-hidden="true"
-              />
-              <span>Search a Book</span>
-            </button>
-
-            <button
-              className="sidebar-action image-button"
-              onClick={onRecommendations}
-              type="button"
-            >
-              <img
-                src={findButton}
-                alt=""
-                aria-hidden="true"
-              />
-              <span>Find My Next Book</span>
-            </button>
-
-          <div className="divider"></div>
-
-          <span className="quote">
-            “Books are a uniquely portable magic.”
-          </span>
-        </>
+          ))}
+        </nav>
       )}
     </aside>
   );

@@ -1,0 +1,89 @@
+.home-navigation-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: min(520px, 100%);
+  min-height: 440px;
+  margin: auto;
+  padding: 32px clamp(24px, 5vw, 52px);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  text-align: center;
+}
+
+.home-panel-logo {
+  display: block;
+  width: min(220px, 78%);
+  height: auto;
+}
+
+.home-panel-subtitle {
+  max-width: 320px;
+  color: var(--ink-soft);
+  font: 1.05rem/1.5 'Patrick Hand', cursive;
+}
+
+.home-panel-actions {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+}
+
+.home-panel-action {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 58px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 180ms ease;
+}
+
+.home-panel-action img {
+  display: block;
+  width: 100%;
+  max-height: 66px;
+  margin: 0 auto;
+  object-fit: contain;
+}
+
+.home-panel-action span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0 18%;
+  color: #fffdf5;
+  font: 700 1.04rem 'Patrick Hand', cursive;
+  text-shadow: 0 1px 2px rgba(50, 30, 20, 0.2);
+  pointer-events: none;
+}
+
+.home-panel-action:hover {
+  transform: translateY(-2px);
+}
+
+.home-panel-quote {
+  color: #8d6c60;
+  font: 0.95rem/1.5 'Kalam', cursive;
+}
+
+.home-panel-action:focus-visible {
+  outline: 3px dashed var(--crayon-hot-pink);
+  outline-offset: 4px;
+}
+
+@media (max-width: 600px) {
+  .home-navigation-panel {
+    width: 100%;
+    min-height: 390px;
+    padding: 28px 22px;
+  }
+}
