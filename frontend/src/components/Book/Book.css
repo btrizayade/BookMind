@@ -16,7 +16,7 @@
 
 .book-image {
     display: block;
-    width: 900px;
+    width: 1000px;
     margin-top: 0px;
     max-width: 90%;
     height: auto;
@@ -31,7 +31,7 @@
 .book-overlay {
     position: absolute;
     left: 50%;
-    top: 45%;
+    top: 42%;
     transform: translate(-50%, -50%);
 
     width: min(820px, 100%);
