@@ -135,7 +135,13 @@ function Recommendations({
   }
 
   return (
-    <section className="recommendations-page">
+    <section
+      className={`recommendations-page ${
+        recommendations.length > 0
+          ? "recommendations-page--with-results"
+          : "recommendations-page--form-only"
+      }`}
+    >
       {/* DECORATIVE SCRAPBOOK ELEMENTS */}
 
       <span
@@ -179,21 +185,11 @@ function Recommendations({
       {/* HEADER */}
 
       <div className="recommendations-header">
-        <span className="scrapbook-label">
-          YOUR LITTLE BOOKISH JOURNEY
-        </span>
-
         <p className="recommendations-eyebrow">
           FIND YOUR NEXT BOOK HERE
         </p>
 
         <h1>What are you in the mood for?</h1>
-
-        <div className="header-paper-line" aria-hidden="true">
-          <span />
-          <span>♡</span>
-          <span />
-        </div>
 
         <p className="recommendations-description">
           Tell us what you like, what you are craving, and the kind

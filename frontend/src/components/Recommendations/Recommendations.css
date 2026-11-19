@@ -4,7 +4,6 @@
 
 .recommendations-page {
     position: relative;
-    margin-top: -90px;
     width: 100%;
     max-width: 1000px;
 
@@ -13,6 +12,37 @@
     color: #4d3930;
 
     animation: scrapbook-entry 0.45s ease-out;
+}
+
+.recommendations-page--form-only {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-self: stretch;
+    min-height: 0;
+    padding-block: clamp(6px, 1.1vh, 14px);
+}
+
+.recommendations-page--form-only .recommendations-header {
+    flex: 0 0 auto;
+    margin-bottom: clamp(8px, 1.5vh, 16px);
+}
+
+.recommendations-page--form-only .recommendations-form {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 0;
+    gap: clamp(5px, 0.9vh, 10px);
+}
+
+.recommendations-page--form-only .recommendation-section {
+    margin-bottom: 0;
+}
+
+.recommendations-page--form-only .handwritten-divider {
+    margin-block: clamp(5px, 0.9vh, 10px);
 }
 
 /* =====================================
@@ -192,33 +222,6 @@
     font-size: 0.85rem;
 
     transform: rotate(12deg);
-}
-
-.header-paper-line {
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    gap: 10px;
-
-    width: 220px;
-
-    margin: 0 auto 9px;
-}
-
-.header-paper-line span:not(:nth-child(2)) {
-    flex: 1;
-
-    height: 1px;
-
-    background: #d8c4b0;
-}
-
-.header-paper-line span:nth-child(2) {
-    color: #8e514e;
-
-    font-size: 13px;
 }
 
 .recommendations-description {
@@ -972,6 +975,18 @@
         width: min(100%, 370px);
 
         margin: 12px auto 0;
+    }
+}
+
+@media (max-width: 750px) {
+    .recommendations-page--form-only {
+        display: block;
+        min-height: auto;
+        padding-block: 18px 38px;
+    }
+
+    .recommendations-page--form-only .recommendations-form {
+        display: block;
     }
 }
 
