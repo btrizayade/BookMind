@@ -38,6 +38,12 @@ interface CurrentUser {
   is_active: boolean;
 }
 
+type SidebarState =
+  | "expanded-navigation-priority"
+  | "navigation-collapsed"
+  | "expanded-width-priority"
+  | "width-collapsed";
+
 function App() {
   const [title, setTitle] = useState("");
   const [book, setBook] = useState<Book | null>(null);
@@ -47,8 +53,8 @@ function App() {
 
   const [activePage, setActivePage] = useState<ActivePage>("home");
 
-  const [isSidebarCollapsed, setIsSidebarCollapsed] =
-    useState(false);
+  const [sidebarState, setSidebarState] =
+    useState<SidebarState>("expanded-navigation-priority");
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [hasVisitedRecommendations, setHasVisitedRecommendations] =
     useState(false);
@@ -70,7 +76,7 @@ function App() {
   const [currentUser, setCurrentUser] =
     useState<CurrentUser | null>(null);
 
-  const [isHomeReturning, setIsHomeReturning] = useState(false);
+  const [homeEntryId, setHomeEntryId] = useState(0);
 
   const searchRequestId = useRef(0);
   const bookRequestId = useRef(0);
@@ -429,7 +435,7 @@ function App() {
    * VOLTA AO ESTADO INICIAL
    */
   function handleHome() {
-    setIsHomeReturning(false);
+    setHomeEntryId((current) => current + 1);
     setShowLogin(false);
     setIsMobileSidebarOpen(false);
 
@@ -488,15 +494,7 @@ function App() {
     setSuggestionsLoading(false);
     setHighlightedSuggestionIndex(-1);
 
-    /*
-     * Usa a mesma linguagem visual da animação scrapbook
-     * já usada no restante do site: fade + pequeno movimento.
-     */
-    setIsHomeReturning(true);
-
-    window.setTimeout(() => {
-      setIsHomeReturning(false);
-    }, 450);
+    setHomeEntryId((current) => current + 1);
 
     setShowLogin(false);
   }
@@ -505,8 +503,22 @@ function App() {
    * SIDEBAR
    */
   function handleToggleSidebar() {
-    setIsSidebarCollapsed((current) => !current);
+    setSidebarState((current) => {
+      switch (current) {
+        case "expanded-navigation-priority":
+          return "navigation-collapsed";
+        case "navigation-collapsed":
+          return "expanded-width-priority";
+        case "expanded-width-priority":
+          return "width-collapsed";
+        case "width-collapsed":
+          return "expanded-navigation-priority";
+      }
+    });
   }
+
+  const isSidebarCollapsed = sidebarState === "width-collapsed";
+  const isNavigationExpanded = sidebarState !== "navigation-collapsed";
 
   const showSidebar = activePage !== "home" || showLogin;
   const isHomeLanding = activePage === "home" && !showLogin;
@@ -549,6 +561,8 @@ function App() {
               <Sidebar
                 activePage={activePage}
                 isCollapsed={isSidebarCollapsed}
+                isNavigationExpanded={isNavigationExpanded}
+                sidebarState={sidebarState}
                 isMobileOpen={isMobileSidebarOpen}
                 onHome={handleHome}
                 onSearch={handleOpenSearch}
@@ -584,14 +598,10 @@ function App() {
                       ? "app-page-content-centered"
                       : ""
                 }`}
-                style={
-                  isHomeReturning
-                    ? { animation: "scrapbook-fade 0.45s ease both" }
-                    : undefined
-                }
               >
                 {activePage === "home" && (
                   <HomeNavigationPanel
+                    key={homeEntryId}
                     onSearch={handleOpenSearch}
                     onRecommendations={handleRecommendations}
                   />

@@ -32,8 +32,7 @@
   font: 700 1.08rem 'Kalam', cursive;
 }
 
-.sidebar-collapse-button,
-.sidebar-expand-button,
+.sidebar-toggle-button,
 .sidebar-mobile-close {
   display: inline-flex;
   align-items: center;
@@ -51,8 +50,7 @@
   cursor: pointer;
 }
 
-.sidebar-collapse-button,
-.sidebar-expand-button {
+.sidebar-toggle-button {
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -62,8 +60,7 @@
   background: var(--paper-pink);
 }
 
-.sidebar-collapse-button:hover,
-.sidebar-expand-button:hover {
+.sidebar-toggle-button:hover {
   background: transparent;
   color: var(--crayon-hot-pink);
 }
@@ -77,7 +74,7 @@
   gap: 7px;
 }
 
-.sidebar-group-toggle {
+.sidebar-group-label {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -91,12 +88,6 @@
   letter-spacing: 0.12em;
   text-align: left;
   text-transform: uppercase;
-  cursor: pointer;
-}
-
-.sidebar-group-toggle:hover {
-  background: rgba(252, 232, 239, 0.7);
-  color: var(--ink);
 }
 
 .sidebar-chevron {
@@ -120,6 +111,10 @@
 
 .sidebar-chevron-down {
   transform: rotate(90deg);
+}
+
+.sidebar-chevron-up {
+  transform: rotate(-90deg);
 }
 
 .sidebar-nav,

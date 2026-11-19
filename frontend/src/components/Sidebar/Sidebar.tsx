@@ -1,14 +1,16 @@
-import { useState } from "react";
 import miniLogo from "../../assets/minilogo.png";
 import searchIcon from "../../assets/search.png";
 import findIcon from "../../assets/find.png";
 import "./Sidebar.css";
 
 export type ActivePage = "home" | "search" | "recommendations";
+type SidebarState = "expanded-navigation-priority" | "navigation-collapsed" | "expanded-width-priority" | "width-collapsed";
 
 interface SidebarProps {
   activePage: ActivePage;
   isCollapsed: boolean;
+  isNavigationExpanded: boolean;
+  sidebarState: SidebarState;
   isMobileOpen: boolean;
   onHome: () => void;
   onSearch: () => void;
@@ -17,7 +19,7 @@ interface SidebarProps {
   onCloseMobile: () => void;
 }
 
-type ChevronDirection = "left" | "right" | "down";
+type ChevronDirection = "left" | "right" | "up" | "down";
 
 function ChevronIcon({ direction }: { direction: ChevronDirection }) {
   return (
@@ -35,6 +37,8 @@ function ChevronIcon({ direction }: { direction: ChevronDirection }) {
 function Sidebar({
   activePage,
   isCollapsed,
+  isNavigationExpanded,
+  sidebarState,
   isMobileOpen,
   onHome,
   onSearch,
@@ -42,7 +46,18 @@ function Sidebar({
   onToggleCollapsed,
   onCloseMobile,
 }: SidebarProps) {
-  const [isNavigationExpanded, setIsNavigationExpanded] = useState(true);
+  const toggleLabel = {
+    "expanded-navigation-priority": "Recolher navega\u00e7\u00e3o vertical",
+    "navigation-collapsed": "Expandir navega\u00e7\u00e3o vertical",
+    "expanded-width-priority": "Recolher largura da navega\u00e7\u00e3o",
+    "width-collapsed": "Expandir largura da navega\u00e7\u00e3o",
+  }[sidebarState];
+  const toggleDirection: ChevronDirection = {
+    "expanded-navigation-priority": "up",
+    "navigation-collapsed": "down",
+    "expanded-width-priority": "left",
+    "width-collapsed": "right",
+  }[sidebarState] as ChevronDirection;
 
   const navigationItems = [
     { page: "home" as const, label: "Início", icon: miniLogo, onClick: onHome },
@@ -67,31 +82,17 @@ function Sidebar({
     >
       <div className="sidebar-brand">
         {!isCollapsed && <span>BookMind</span>}
-        {isCollapsed ? (
-          <button
-            className="sidebar-expand-button"
-            onClick={onToggleCollapsed}
-            aria-label="Expandir navegação"
-            aria-expanded={false}
-            aria-controls="bookmind-sidebar"
-            title="Expandir navegação"
-            type="button"
-          >
-            <ChevronIcon direction="right" />
-          </button>
-        ) : (
-          <button
-            className="sidebar-collapse-button"
-            onClick={onToggleCollapsed}
-            aria-label="Recolher navegação"
-            aria-expanded={true}
-            aria-controls="bookmind-sidebar"
-            title="Recolher navegação"
-            type="button"
-          >
-            <ChevronIcon direction="left" />
-          </button>
-        )}
+        <button
+          className="sidebar-toggle-button"
+          onClick={onToggleCollapsed}
+          aria-label={toggleLabel}
+          aria-expanded={isNavigationExpanded}
+          aria-controls="bookmind-primary-navigation"
+          title={toggleLabel}
+          type="button"
+        >
+          <ChevronIcon direction={toggleDirection} />
+        </button>
         <button
           className="sidebar-mobile-close"
           onClick={onCloseMobile}
@@ -103,48 +104,45 @@ function Sidebar({
         </button>
       </div>
 
-      {!isCollapsed && (
+      {!isCollapsed && isNavigationExpanded && (
         <div className="sidebar-group">
-          <button
-            className="sidebar-group-toggle"
-            onClick={() => setIsNavigationExpanded((expanded) => !expanded)}
-            aria-expanded={isNavigationExpanded}
-            aria-controls="bookmind-primary-navigation"
-            type="button"
+          <span className="sidebar-group-label">{'Navega\u00e7\u00e3o'}</span>
+          <nav
+            className="sidebar-nav"
+            id="bookmind-primary-navigation"
+            aria-label={'Navega\u00e7\u00e3o principal'}
           >
-            <span>Navegação</span>
-            <ChevronIcon direction={isNavigationExpanded ? "down" : "right"} />
-          </button>
-
-          {isNavigationExpanded && (
-            <nav
-              className="sidebar-nav"
-              id="bookmind-primary-navigation"
-              aria-label="Navegação principal"
-            >
-              {navigationItems.map((item) => (
-                <button
-                  key={item.page}
-                  className={`sidebar-nav-link ${activePage === item.page ? "is-active" : ""}`}
-                  onClick={() => {
-                    item.onClick();
-                    onCloseMobile();
-                  }}
-                  aria-current={activePage === item.page ? "page" : undefined}
-                  title={item.label}
-                  type="button"
-                >
-                  <img src={item.icon} alt="" aria-hidden="true" />
-                  <span>{item.label}</span>
-                </button>
-              ))}
-            </nav>
-          )}
+            {navigationItems.map((item) => (
+              <button
+                key={item.page}
+                className={`sidebar-nav-link ${activePage === item.page ? "is-active" : ""}`}
+                onClick={() => {
+                  item.onClick();
+                  onCloseMobile();
+                }}
+                aria-current={activePage === item.page ? "page" : undefined}
+                title={item.label}
+                type="button"
+              >
+                <img src={item.icon} alt="" aria-hidden="true" />
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </nav>
         </div>
       )}
 
+      {!isCollapsed && !isNavigationExpanded && (
+        <nav
+          id="bookmind-primary-navigation"
+          className="sidebar-nav"
+          aria-label={'Navega\u00e7\u00e3o principal'}
+          hidden
+        />
+      )}
+
       {isCollapsed && (
-        <nav className="sidebar-rail" aria-label="Navegação principal">
+        <nav id="bookmind-primary-navigation" className="sidebar-rail" aria-label="Navegação principal">
           {navigationItems.map((item) => (
             <button
               key={item.page}

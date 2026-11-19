@@ -13,6 +13,19 @@
   background: transparent;
   box-shadow: none;
   text-align: center;
+  animation: home-panel-enter 380ms ease-out both;
+}
+
+@keyframes home-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(9px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .home-panel-logo {
